@@ -1,0 +1,7 @@
+.DS_Store
+/_tmp
+.env
+/target
+Cargo.lock
+*.swp
+*.swo
