@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use pawbun_files::{DefaultFileLoader, File, FileLoader, MediaContent};
+use pawbun_files::{DefaultFileLoader, File, FileLoader};
 use pawbun_toolkit::{Tool, ToolError, ToolKit, ToolParameter, ToolRegistry, ToolResult};
 use serde_json::json;
 

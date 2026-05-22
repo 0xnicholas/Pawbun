@@ -2,59 +2,8 @@
 
 use std::io::{BufRead, ErrorKind, Write};
 
-use super::protocol::{JsonRpcRequest, JsonRpcResponse};
-use crate::ToolError;
-
-/// MCP transport error.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum TransportError {
-    #[error("IO error: {message} (kind: {kind:?})")]
-    Io { message: String, kind: ErrorKind },
-    #[error("serialization error: {0}")]
-    Serialization(String),
-    #[error("unexpected EOF")]
-    UnexpectedEof,
-    #[error("HTTP error: {0}")]
-    Http(String),
-}
-
-impl From<TransportError> for ToolError {
-    fn from(err: TransportError) -> Self {
-        ToolError::ExecutionFailed(err.to_string())
-    }
-}
-
-/// MCP transport abstraction.
-///
-/// Responsible for sending JSON-RPC requests and receiving responses.
-pub trait Transport: Send + Sync {
-    /// Sends a JSON-RPC request and waits for a response.
-    ///
-    /// **Note**: `&mut self` restricts each transport instance to sequential use.
-    /// Concurrent requests require external synchronization or multiple transport instances.
-    fn request(&mut self, req: JsonRpcRequest) -> Result<JsonRpcResponse, TransportError>;
-
-    /// Closes the transport connection.
-    fn close(self: Box<Self>) -> Result<(), TransportError>;
-}
-
-/// Transport configuration.
-#[derive(Debug, Clone)]
-pub enum TransportConfig {
-    /// Communicate via a subprocess's stdin/stdout.
-    Stdio {
-        /// Command to spawn (e.g. `npx`, `uvx`, or a binary path).
-        command: String,
-        /// Arguments passed to the command.
-        args: Vec<String>,
-    },
-    /// Communicate via HTTP Server-Sent Events.
-    #[cfg(feature = "http")]
-    Sse {
-        /// SSE endpoint URL.
-        url: String,
-    },
-}
+use pawbun_mcp_core::protocol::{JsonRpcRequest, JsonRpcResponse};
+pub use pawbun_mcp_core::transport::{Transport, TransportConfig, TransportError};
 
 // -------------------------------------------------------------------------
 // StdioTransport
@@ -166,7 +115,7 @@ impl Transport for StdioTransport {
 #[cfg(feature = "http")]
 mod sse {
     use super::*;
-    use super::super::protocol::JsonRpcId;
+    use pawbun_mcp_core::protocol::JsonRpcId;
     use std::collections::HashMap;
     use std::sync::Arc;
     use std::time::Duration;
@@ -364,7 +313,7 @@ mod sse {
                 jsonrpc: "2.0".into(),
                 id,
                 result: None,
-                error: Some(super::super::protocol::JsonRpcError {
+                error: Some(pawbun_mcp_core::protocol::JsonRpcError {
                     code: -32000,
                     message: "SSE connection lost, request not resent".into(),
                     data: None,
@@ -718,13 +667,13 @@ mod sse {
             });
 
             let mut transport = SseTransport::new(format!("http://127.0.0.1:{}/sse", port)).unwrap();
-            let req = super::super::super::protocol::JsonRpcRequest::new(
+            let req = super::pawbun_mcp_core::protocol::JsonRpcRequest::new(
                 1i64,
                 "tools/list",
                 None,
             );
             let resp = transport.request(req).unwrap();
-            assert_eq!(resp.id, Some(super::super::super::protocol::JsonRpcId::Number(1)));
+            assert_eq!(resp.id, Some(super::pawbun_mcp_core::protocol::JsonRpcId::Number(1)));
             assert!(resp.result.is_some());
 
             done_rx.recv_timeout(Duration::from_secs(5)).unwrap();

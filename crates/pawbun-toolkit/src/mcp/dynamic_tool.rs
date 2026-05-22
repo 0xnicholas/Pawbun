@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex, Weak};
 use serde_json::json;
 
 use super::adapter::McpSession;
-use super::protocol::ToolContent;
+use pawbun_mcp_core::protocol::ToolContent;
 use crate::{Tool, ToolError, ToolParameter, ToolResult};
 
 /// A tool that proxies calls to an MCP server.

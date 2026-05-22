@@ -5,11 +5,12 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use serde_json::json;
 
-use super::protocol::{
+use pawbun_mcp_core::protocol::{
     CallToolParams, CallToolResult, ClientInfo, InitializeParams, JsonRpcRequest, JsonRpcResponse,
     ListToolsResult, McpToolDesc,
 };
-use super::transport::{StdioTransport, Transport, TransportConfig, TransportError};
+use pawbun_mcp_core::transport::{Transport, TransportConfig, TransportError};
+use super::transport::StdioTransport;
 
 /// Error type for MCP operations.
 #[derive(Debug, Clone, thiserror::Error)]
@@ -58,6 +59,12 @@ impl McpAdapter {
             #[cfg(feature = "http")]
             TransportConfig::Sse { url } => {
                 Box::new(super::transport::SseTransport::new(url)?)
+            }
+            #[cfg(not(feature = "http"))]
+            TransportConfig::Sse { .. } => {
+                return Err(McpError::Transport(TransportError::Http(
+                    "SSE requires the 'http' feature".into(),
+                )));
             }
         };
 
@@ -197,10 +204,7 @@ mod tests {
     use serde_json::json;
 
     use super::*;
-    use crate::mcp::protocol::{JsonRpcId, JsonRpcRequest, JsonRpcResponse};
-    use crate::mcp::transport::{Transport, TransportError};
-    #[allow(unused_imports)]
-    use crate::mcp::TransportConfig;
+    use crate::mcp::{JsonRpcId, JsonRpcRequest, JsonRpcResponse, Transport, TransportConfig, TransportError};
 
     struct MockTransport {
         responses: Mutex<VecDeque<JsonRpcResponse>>,
@@ -311,7 +315,7 @@ mod tests {
         assert!(!result.is_error);
         assert_eq!(result.content.len(), 1);
         assert!(
-            matches!(&result.content[0], super::super::protocol::ToolContent::Text { text } if text == "hello world")
+            matches!(&result.content[0], pawbun_mcp_core::protocol::ToolContent::Text { text } if text == "hello world")
         );
     }
 
