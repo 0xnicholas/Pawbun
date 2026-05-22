@@ -667,13 +667,13 @@ mod sse {
             });
 
             let mut transport = SseTransport::new(format!("http://127.0.0.1:{}/sse", port)).unwrap();
-            let req = super::pawbun_mcp_core::protocol::JsonRpcRequest::new(
+            let req = pawbun_mcp_core::protocol::JsonRpcRequest::new(
                 1i64,
                 "tools/list",
                 None,
             );
             let resp = transport.request(req).unwrap();
-            assert_eq!(resp.id, Some(super::pawbun_mcp_core::protocol::JsonRpcId::Number(1)));
+            assert_eq!(resp.id, Some(pawbun_mcp_core::protocol::JsonRpcId::Number(1)));
             assert!(resp.result.is_some());
 
             done_rx.recv_timeout(Duration::from_secs(5)).unwrap();
