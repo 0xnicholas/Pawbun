@@ -128,7 +128,7 @@ impl McpServer {
     }
 
     fn run_loop(
-        mut self,
+        self,
         mut transport: Box<dyn ServerTransport>,
     ) -> Result<(), McpServerError> {
         let mut handler = RequestHandler::new(self.toolkit, self.server_info, self.capabilities);
