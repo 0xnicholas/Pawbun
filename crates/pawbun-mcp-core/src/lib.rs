@@ -3,6 +3,8 @@
 //! This crate provides the foundational types shared by both MCP clients
 //! and servers in the Pawbun ecosystem.
 
+pub mod protocol;
+
 /// Describes a tool's input parameter for JSON Schema generation.
 ///
 /// This is the canonical definition of `ToolParameter` used by both
