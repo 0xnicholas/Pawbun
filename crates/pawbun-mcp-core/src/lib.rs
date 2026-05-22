@@ -4,6 +4,7 @@
 //! and servers in the Pawbun ecosystem.
 
 pub mod protocol;
+pub mod transport;
 
 /// Describes a tool's input parameter for JSON Schema generation.
 ///
