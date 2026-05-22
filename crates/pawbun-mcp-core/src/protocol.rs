@@ -104,6 +104,7 @@ impl From<&str> for JsonRpcId {
 
 /// MCP initialize request params.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InitializeParams {
     pub protocol_version: String,
     pub capabilities: Value,
@@ -112,6 +113,7 @@ pub struct InitializeParams {
 
 /// MCP client info.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ClientInfo {
     pub name: String,
     pub version: String,
@@ -119,6 +121,7 @@ pub struct ClientInfo {
 
 /// MCP initialize result.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InitializeResult {
     pub protocol_version: String,
     pub capabilities: Value,
@@ -127,6 +130,7 @@ pub struct InitializeResult {
 
 /// MCP server info.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ServerInfo {
     pub name: String,
     pub version: String,
@@ -134,6 +138,7 @@ pub struct ServerInfo {
 
 /// A tool description returned by `tools/list`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct McpToolDesc {
     pub name: String,
     pub description: Option<String>,
@@ -149,6 +154,7 @@ pub struct ListToolsResult {
 
 /// Params for `tools/call`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CallToolParams {
     pub name: String,
     pub arguments: Option<Value>,
@@ -156,6 +162,7 @@ pub struct CallToolParams {
 
 /// Result of `tools/call`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CallToolResult {
     pub content: Vec<ToolContent>,
     #[serde(default)]
