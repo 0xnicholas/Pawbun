@@ -2,6 +2,7 @@
 /_tmp
 .env
 /target
+.worktrees/
 Cargo.lock
 *.swp
 *.swo
