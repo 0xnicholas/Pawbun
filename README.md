@@ -2,11 +2,13 @@
 
 Pawbun 是 [Pandaria](https://github.com/0xnicholas/pandaria) 生态的 Rust workspace，为 Agent 系统提供工具注册、执行以及多模态文件处理能力。
 
-包含 3 个 crate：
+包含 5 个 crate：
 
 - **pawbun-toolkit** — Agent 工具集（类似 CrewAI Tools），含内置工具、MCP 客户端、过程宏
 - **pawbun-toolkit-macros** — `#[pawbun_tool]` 属性宏，自动生成 `Tool` 样板代码
 - **pawbun-files** — 多模态文件处理（类似 CrewAI Files），支持多种媒体类型的统一加载与 LLM Provider 格式化
+- **pawbun-mcp-core** — MCP 协议核心类型（JSON-RPC 2.0、ToolParameter、Transport trait）
+- **pawbun-mcp-server** — MCP 服务器（stdio / SSE），含配置化 Builder 和工具桥接
 
 ## 特性
 
@@ -25,7 +27,9 @@ Pawbun/
 ├── crates/
 │   ├── pawbun-toolkit/          # Agent 工具注册与执行
 │   ├── pawbun-toolkit-macros/   # #[pawbun_tool] 过程宏
-│   └── pawbun-files/            # 多模态文件处理
+│   ├── pawbun-files/            # 多模态文件处理
+│   ├── pawbun-mcp-core/         # MCP 协议核心类型
+│   └── pawbun-mcp-server/       # MCP 服务器实现
 ├── docs/
 │   ├── specs/
 │   └── plans/
@@ -290,6 +294,14 @@ let f4 = File::from_path("./data.bin")
 
 ---
 
+## 性能基准
+
+```bash
+cargo bench --workspace
+```
+
+基准结果见 `benches/README.md`。
+
 ## 构建与开发
 
 ```bash
@@ -301,6 +313,9 @@ cargo test --workspace
 
 # 带 feature 测试
 cargo test --workspace --all-features
+
+# 检查所有示例
+cargo check --examples --workspace --all-features
 
 # 生成文档
 cargo doc --workspace --no-deps --open
