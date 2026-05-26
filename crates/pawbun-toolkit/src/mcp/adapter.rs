@@ -208,7 +208,7 @@ mod tests {
     use serde_json::json;
 
     use super::*;
-    use crate::mcp::{JsonRpcId, JsonRpcRequest, JsonRpcResponse, Transport, TransportConfig, TransportError};
+    use crate::mcp::{JsonRpcId, JsonRpcRequest, JsonRpcResponse, Transport, TransportError};
 
     struct MockTransport {
         responses: Mutex<VecDeque<JsonRpcResponse>>,
