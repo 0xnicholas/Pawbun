@@ -31,7 +31,8 @@ fn build_input_schema(params: &[pawbun_toolkit::ToolParameter]) -> Value {
 /// Lifecycle:
 /// 1. Uninitialized — only `initialize` and `notifications/initialized` accepted.
 /// 2. Initialized — `tools/list` and `tools/call` become available.
-pub(crate) struct RequestHandler {
+#[doc(hidden)]
+pub struct RequestHandler {
     toolkit: ToolKit,
     server_info: ServerInfo,
     capabilities: Value,

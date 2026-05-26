@@ -27,3 +27,8 @@ http = ["dep:tokio", "dep:axum", "dep:tower-http", "dep:uuid", "dep:async-stream
 [dev-dependencies]
 tempfile = "3"
 tokio = { version = "1", features = ["rt", "macros", "time"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "handler"
+harness = false
