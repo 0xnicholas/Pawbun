@@ -6,19 +6,19 @@
 
 ---
 
-## 当前版本：0.1.0
+## 当前版本：0.2.0
 
-**发布日期**：待定（开发分支已完成，待打 tag）
+**发布日期**：2026-05-26
 
-**Workspace 版本**：`0.1.0`
+**Workspace 版本**：`0.2.0`
 
 | Crate | 版本 | 状态 | 说明 |
 |---|---|---|---|
-| `pawbun-toolkit` | 0.1.0 | ✅ 可用 | Agent 工具注册与执行核心 |
-| `pawbun-toolkit-macros` | 0.1.0 | ✅ 可用 | `#[pawbun_tool]` 过程宏 |
-| `pawbun-files` | 0.1.0 | ✅ 可用 | 多模态文件加载与 Provider 格式化 |
-| `pawbun-mcp-core` | 0.1.0 | ✅ 可用 | MCP 协议类型与传输抽象 |
-| `pawbun-mcp-server` | 0.1.0 | ✅ 可用 | MCP 服务器（stdio / SSE）|
+| `pawbun-toolkit` | 0.2.0 | ✅ 可用 | Agent 工具注册与执行核心（含适配器示例）|
+| `pawbun-toolkit-macros` | 0.2.0 | ✅ 可用 | `#[pawbun_tool]` 过程宏 |
+| `pawbun-files` | 0.2.0 | ✅ 可用 | 多模态文件加载与 Provider 格式化 |
+| `pawbun-mcp-core` | 0.2.0 | ✅ 可用 | MCP 协议类型与传输抽象 |
+| `pawbun-mcp-server` | 0.2.0 | ✅ 可用 | MCP 服务器（stdio / SSE，含配置化 Builder）|
 
 ---
 
@@ -37,11 +37,13 @@
   - `WebSearchTool` — 搜索调用（`http` feature）
   - `CsvQueryTool` — CSV 查询（`csv` feature）
   - `JsonQueryTool` — JSONPath 查询（`jsonpath` feature）
-- ⚠️ 占位工具（接口已定义，执行返回错误，需外部集成）：
-  - `CodeExecuteTool` — 需外部沙箱（Docker / Firejail / e2b）
-  - `EmbeddingTool` — 需外部 embedding 服务
-  - `VisionTool` — 需外部多模态模型
+- ✅ 占位工具 + 适配器示例：
+  - `CodeExecuteTool` — 占位接口 + `examples/docker_code_executor.rs`（Docker CLI 实现）
+  - `EmbeddingTool` — 占位接口 + `examples/openai_embedding.rs`（OpenAI API 实现）
+  - `VisionTool` — 占位接口 + `examples/openai_vision.rs`（OpenAI GPT-4o 实现）
 - ✅ MCP 客户端（Stdio + SSE 传输，`DynamicTool` 代理远程工具）
+- ✅ `ToolError` 链式错误（`#[source]` + `with_source()`）
+- ✅ `SseTransport` 可配置重试（`new_with_retry`）
 
 ### pawbun-toolkit-macros
 
@@ -69,11 +71,12 @@
 
 ### pawbun-mcp-server
 
-- ✅ `McpServer` + `McpServerBuilder`
+- ✅ `McpServer` + `McpServerBuilder`（支持 `protocol_version` / `capabilities` / `cors_origins` / `request_timeout` / `tool_timeout`）
 - ✅ `RequestHandler`：initialize 状态机 + 方法路由
 - ✅ 支持方法：`initialize` / `notifications/initialized` / `tools/list` / `tools/call`
 - ✅ Stdio 传输（生产就绪）
 - ✅ SSE 传输（`http` feature，基于 axum）
+- ✅ `SseServerConfig`：可配置心跳、最大连接数、会话 TTL、CORS
 - ✅ `FileLoader` → MCP Tool bridge（`file_read` / `file_list`）
 - ✅ 工具去重：用户注册工具优先于 bridge 工具
 
@@ -85,16 +88,17 @@
 |---|---|
 | 编译状态 | ✅ 零错误 |
 | Clippy | ✅ 零警告 (`-D warnings`) |
-| 单元测试 | ✅ 176 passed / 0 failed |
-| 文档测试 | ✅ 32 passed / 0 failed |
-| 代码行数 | ~15,100 行 Rust |
+| 单元测试 | ✅ 208 passed / 0 failed |
+| 文档测试 | ✅ 21 passed / 0 failed |
+| 代码行数 | ~17,800 行 Rust |
+| 示例 | 3 个（docker_code_executor, openai_vision, openai_embedding）|
 | 测试覆盖率 | 核心模块全覆盖（trait、工具、loader、provider、handler、transport） |
 
 ---
 
 ## 已知限制
 
-1. **占位工具**：`CodeExecuteTool`、`EmbeddingTool`、`VisionTool` 仅为接口占位，调用 `execute` 会返回错误提示，需外部服务集成后方可使用。此为设计意图。
+1. **占位工具**：`CodeExecuteTool`、`EmbeddingTool`、`VisionTool` 仍为接口占位，但已提供官方适配器示例（`examples/` 目录），开发者可复制修改后使用。生产集成建议基于示例创建独立 crate。
 2. **tracing 深度集成**：`tracing` feature 已存在，但未在所有关键路径加 `#[instrument]`。
 3. **性能基准**：尚未建立正式的 benchmark 基线。
 4. **无 CHANGELOG**：首次发布，尚无历史版本记录。
@@ -102,6 +106,18 @@
 ---
 
 ## 版本历史
+
+### 0.2.0 — 生态集成
+
+**范围**：ToolError 链式错误、MCP Server 配置化、SSE 稳定性、适配器示例
+
+**主要提交**：
+- `f997129` feat: implement Pawbun 0.2.0 ecosystem integration
+  - `ToolError` 重构：`#[source]` 链式错误 + 向后兼容快捷构造函数
+  - `ServerCapabilities` 类型安全结构 + `McpServerBuilder` 扩展
+  - SSE 可配置心跳/连接限制/会话 TTL + 客户端重试参数暴露
+  - 3 个适配器示例：DockerCodeExecutor、OpenAiVisionTool、OpenAiEmbeddingTool
+  - 修复代理导致的 flaky 测试
 
 ### 0.1.0（初始版本）
 
@@ -128,23 +144,23 @@
 
 ---
 
-### 0.2.0 — 生态集成
+### 0.2.0 — 生态集成 ✅ 已完成
 
 **目标**：降低占位工具的集成门槛，让 Pawbun 与外部服务（沙箱、LLM、Embedding）顺畅对接。
 
-| 工作项 | 优先级 | 说明 |
-|---|---|---|
-| `CodeExecuteTool` 适配器示例 | P0 | 提供 Docker 沙箱适配器示例 crate（`pawbun-sandbox-docker` 或示例代码），演示如何将占位转为可用 |
-| `VisionTool` 适配器示例 | P0 | 提供 OpenAI / Anthropic 视觉 API 的适配器示例 |
-| `EmbeddingTool` 适配器示例 | P1 | 提供 OpenAI embedding API 或 `fastembed-rs` 的适配器示例 |
-| 错误上下文增强 | P1 | 在 `ToolError` / `LoadError` / `McpServerError` 中加入 `#[source]` 链式错误，提升调试体验 |
-| `pawbun-mcp-server` 配置化 | P1 | 支持通过 `McpServerBuilder` 自定义协议版本、capabilities、CORS（SSE）等 |
-| SSE 传输稳定性 | P1 | 增加重连逻辑、心跳检测、连接池管理 |
+| 工作项 | 优先级 | 状态 | 说明 |
+|---|---|---|---|
+| `CodeExecuteTool` 适配器示例 | P0 | ✅ | `examples/docker_code_executor.rs`：Docker CLI 沙箱，含资源限制与超时 |
+| `VisionTool` 适配器示例 | P0 | ✅ | `examples/openai_vision.rs`：OpenAI GPT-4o 视觉分析 |
+| `EmbeddingTool` 适配器示例 | P1 | ✅ | `examples/openai_embedding.rs`：OpenAI text-embedding-3 |
+| 错误上下文增强 | P1 | ✅ | `ToolError` `#[source]` 链式错误 + `with_source()` + 向后兼容构造函数 |
+| `pawbun-mcp-server` 配置化 | P1 | ✅ | `ServerCapabilities` 类型安全 + Builder 扩展（protocol_version / CORS / timeout）|
+| SSE 传输稳定性 | P1 | ✅ | `SseServerConfig` 可配置心跳/最大连接数/会话 TTL；客户端 `new_with_retry` |
 
 **验收标准**：
-- `cargo test --workspace --all-features` 全绿
-- `cargo clippy --workspace --all-features -- -D warnings` 零警告
-- 示例代码可在 README 中直接复制运行
+- ✅ `cargo test --workspace --all-features` 全绿（208 passed）
+- ✅ `cargo clippy --workspace --all-features -- -D warnings` 零警告
+- ✅ 3 个示例均独立编译通过
 
 ---
 
@@ -152,20 +168,90 @@
 
 **目标**：建立性能基线，精简公共 API，成为社区可信赖的依赖。
 
-| 工作项 | 优先级 | 说明 |
+#### Phase 1: 基准测试（P0）
+
+扩展现有 `crates/pawbun-toolkit/benches/toolkit.rs`：
+
+| 基准项 | 说明 | 目标 |
 |---|---|---|
-| Criterion 基准测试 | P0 | 填充现有 `crates/pawbun-toolkit/benches/toolkit.rs`：工具注册开销、注册表查找、序列化/反序列化、文件加载吞吐 |
-| 基准目标 | P0 | 同步工具调用 overhead < 1μs；注册表查找 O(1) 实测确认 |
-| `pub` API 审计 | P0 | 审查所有 `pub` 项，移除不必要的暴露；确保 semver 合规 |
-| 模块重组织评估 | P1 | 评估是否将 `pawbun-toolkit::mcp` 下的客户端代码进一步解耦 |
-| 文档增强 | P1 | 增加 `examples/` 目录（每个 crate 至少 2 个可运行示例）、cookbook 风格指南 |
-| 兼容性测试 | P1 | 在 CI 中测试不同 feature 组合（最小依赖集 vs `full`） |
-| 依赖精简 | P2 | 评估 `image` crate 等重型依赖是否可 feature-gate 得更细 |
+| `toolkit_register` | 向 `ToolKit` 注册 1~1000 个工具的开销 | 单次注册 < 50μs |
+| `toolkit_lookup` | `ToolKit::get` 查找 O(1) 实测 | < 100ns |
+| `tool_execute_overhead` | `ToolKit::execute` 空工具调用 overhead | < 1μs |
+| `tool_descriptions` | `ToolKit::descriptions()` 生成描述字符串 | < 1ms/100 tools |
+| `json_schema_build` | `build_input_schema` 从 `ToolParameter` 构建 JSON Schema | < 10μs |
+| `sse_parser` | SSE 事件解析吞吐 | > 1M events/sec |
+| `file_load_local` | `DefaultFileLoader` 本地文件加载 | 与 std::fs::read 差距 < 2x |
+
+新增 crate 级基准：
+- `pawbun-files/benches/loader.rs` — 文件加载、Provider 格式化吞吐
+- `pawbun-mcp-server/benches/handler.rs` — RequestHandler 初始化 + tools/list 响应
+
+#### Phase 2: pub API 审计（P0）
+
+逐 crate 审查所有 `pub`/`pub(crate)` 项：
+
+| Crate | 审计重点 |
+|---|---|
+| `pawbun-toolkit` | `ToolKit` 字段是否应私有化；`json_utils` 是否应 `pub(crate)`；`mcp` 模块下的类型暴露粒度 |
+| `pawbun-files` | `FileLoader` trait 方法是否需要精简；Provider 格式化器的内部辅助函数暴露 |
+| `pawbun-mcp-core` | `JsonRpcId` / `JsonRpcError` 的构造函数是否完整；`schema_convert` 的边界情况 |
+| `pawbun-mcp-server` | `RequestHandler` 是否应 `pub(crate)`；`tool_bridge` 模块暴露范围 |
+
+潜在 breaking changes（0.3.0 是最后一次可调整的机会）：
+- 将过度暴露的模块标记为 `#[doc(hidden)]` 或降级为 `pub(crate)`
+- 统一命名风格（如 `ToolParameter::schema` 与 MCP 的 `input_schema`）
+- 评估 `ToolKit::with_timeout` → `ToolKit::set_timeout` 等命名一致性
+
+#### Phase 3: 文档增强（P1）
+
+每个 crate 至少 2 个可运行示例：
+
+| Crate | 示例 1 | 示例 2 |
+|---|---|---|
+| `pawbun-toolkit` | `examples/basic_toolkit.rs` — 注册工具 + 执行 | `examples/custom_tool.rs` — 手写 `Tool` trait 实现 |
+| `pawbun-files` | `examples/load_image.rs` — 加载图片并格式化为 Provider | `examples/batch_load.rs` — 批量加载 + 约束配置 |
+| `pawbun-mcp-server` | `examples/stdio_server.rs` — stdio MCP 服务器 | `examples/sse_server.rs` — SSE MCP 服务器 + CORS |
+| `pawbun-mcp-core` | `examples/schema_convert.rs` — schema 双向转换 | `examples/custom_transport.rs` — 实现自定义 Transport |
+
+文档目标：
+- 所有 `pub` API 有完整 doc comment + `# Example`
+- `README.md` 更新：新增 0.2.0 特性、快速开始示例
+- 新增 `docs/cookbook.md`：常见场景指南（"如何添加自定义工具"、"如何配置 MCP 服务器"、"如何安全加载文件"）
+
+#### Phase 4: 兼容性测试 & CI（P1）
+
+Feature 组合矩阵测试（本地脚本 + CI）：
+
+```bash
+# 最小依赖集
+cargo check --workspace --no-default-features
+# 逐个 feature
+cargo check --workspace --features http
+cargo check --workspace --features tokio
+cargo check --workspace --features csv
+cargo check --workspace --features jsonpath
+cargo check --workspace --features schemars
+cargo check --workspace --features tracing
+cargo check --workspace --features macros
+# 全量
+cargo check --workspace --all-features
+```
+
+验证 `default-features = false` 的消费者不会拉取不必要依赖。
+
+#### Phase 5: 依赖精简（P2）
+
+评估项：
+- `image` crate（`pawbun-files` 的 `image-meta` feature）：是否可用更轻量的 `image-meta` 替代完整 `image`
+- `schemars`：仅在 `macros`/`schemars` feature 需要时编译
+- `reqwest`：评估是否可用更轻量的 `ureq` 替代同步场景
+- `tokio`：确认 `pawbun-mcp-server` 的 `http` feature 下 `tokio` 的最小 feature set
 
 **验收标准**：
-- 基准测试报告纳入版本发布说明
+- 基准测试报告纳入版本发布说明（`benches/README.md`）
 - `cargo public-api`（如有）或人工审计确认无意外 breaking change
-- docs.rs 上所有 crate 文档评分 A+
+- docs.rs 上所有 crate 文档覆盖率 100%（`#![deny(missing_docs)]`）
+- Feature 组合矩阵全部编译通过
 
 ---
 
