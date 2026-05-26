@@ -29,3 +29,9 @@ full = ["url-source", "image-meta", "tracing", "tokio"]
 [dev-dependencies]
 tempfile = "3"
 tokio = { version = "1", features = ["rt", "macros"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+wiremock = "0.6"
+
+[[bench]]
+name = "loader"
+harness = false
