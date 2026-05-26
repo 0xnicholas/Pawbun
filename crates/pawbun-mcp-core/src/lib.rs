@@ -1,10 +1,14 @@
+#![deny(missing_docs)]
 //! MCP protocol core types and transport abstractions.
 //!
 //! This crate provides the foundational types shared by both MCP clients
 //! and servers in the Pawbun ecosystem.
 
+/// MCP JSON-RPC 2.0 protocol types.
 pub mod protocol;
+/// Bidirectional schema conversion between MCP input schema and ToolParameter lists.
 pub mod schema_convert;
+/// Transport abstractions for MCP communication.
 pub mod transport;
 
 /// Describes a tool's input parameter for JSON Schema generation.

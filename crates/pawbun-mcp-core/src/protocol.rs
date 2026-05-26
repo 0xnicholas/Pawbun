@@ -6,9 +6,13 @@ use serde_json::Value;
 /// A JSON-RPC request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
+    /// JSON-RPC version (always "2.0").
     pub jsonrpc: String,
+    /// Request ID (`None` for notifications).
     pub id: Option<JsonRpcId>,
+    /// Method name to invoke.
     pub method: String,
+    /// Method parameters.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<Value>,
 }
@@ -16,10 +20,14 @@ pub struct JsonRpcRequest {
 /// A JSON-RPC response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcResponse {
+    /// JSON-RPC version (always "2.0").
     pub jsonrpc: String,
+    /// Response ID (matches request ID).
     pub id: Option<JsonRpcId>,
+    /// Result value (present on success).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result: Option<Value>,
+    /// Error object (present on failure).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<JsonRpcError>,
 }
@@ -27,8 +35,11 @@ pub struct JsonRpcResponse {
 /// JSON-RPC error object.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcError {
+    /// Error code.
     pub code: i32,
+    /// Error message.
     pub message: String,
+    /// Additional error data.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<Value>,
 }
@@ -37,8 +48,11 @@ pub struct JsonRpcError {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(untagged)]
 pub enum JsonRpcId {
+    /// Numeric ID.
     Number(i64),
+    /// String ID.
     String(String),
+    /// Null ID (used in notifications).
     Null,
 }
 
@@ -106,8 +120,11 @@ impl From<&str> for JsonRpcId {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InitializeParams {
+    /// Protocol version string (e.g. "2024-11-05").
     pub protocol_version: String,
+    /// Client capabilities.
     pub capabilities: Value,
+    /// Client identification info.
     pub client_info: ClientInfo,
 }
 
@@ -115,7 +132,9 @@ pub struct InitializeParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ClientInfo {
+    /// Client name.
     pub name: String,
+    /// Client version.
     pub version: String,
 }
 
@@ -123,8 +142,11 @@ pub struct ClientInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InitializeResult {
+    /// Protocol version string.
     pub protocol_version: String,
+    /// Server capabilities.
     pub capabilities: Value,
+    /// Server identification info.
     pub server_info: ServerInfo,
 }
 
@@ -132,7 +154,9 @@ pub struct InitializeResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ServerInfo {
+    /// Server name.
     pub name: String,
+    /// Server version.
     pub version: String,
 }
 
@@ -140,8 +164,11 @@ pub struct ServerInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct McpToolDesc {
+    /// Tool name.
     pub name: String,
+    /// Tool description.
     pub description: Option<String>,
+    /// JSON Schema for tool input parameters.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub input_schema: Option<Value>,
 }
@@ -149,6 +176,7 @@ pub struct McpToolDesc {
 /// Result of `tools/list`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListToolsResult {
+    /// Available tools.
     pub tools: Vec<McpToolDesc>,
 }
 
@@ -156,7 +184,9 @@ pub struct ListToolsResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CallToolParams {
+    /// Tool name to call.
     pub name: String,
+    /// Tool arguments.
     pub arguments: Option<Value>,
 }
 
@@ -164,7 +194,9 @@ pub struct CallToolParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CallToolResult {
+    /// Result content items.
     pub content: Vec<ToolContent>,
+    /// Whether the tool call resulted in an error.
     #[serde(default)]
     pub is_error: bool,
 }
@@ -173,12 +205,26 @@ pub struct CallToolResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ToolContent {
+    /// Text content.
     #[serde(rename = "text")]
-    Text { text: String },
+    Text {
+        /// Text value.
+        text: String,
+    },
+    /// Image content (Base64-encoded).
     #[serde(rename = "image")]
-    Image { data: String, mime_type: String },
+    Image {
+        /// Base64-encoded image data.
+        data: String,
+        /// Image MIME type.
+        mime_type: String,
+    },
+    /// Resource reference.
     #[serde(rename = "resource")]
-    Resource { resource: Value },
+    Resource {
+        /// Resource value.
+        resource: Value,
+    },
 }
 
 // -----------------------------------------------------------------------------
