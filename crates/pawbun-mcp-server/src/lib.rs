@@ -1,3 +1,4 @@
+#![deny(missing_docs)]
 //! MCP Server for exposing Pawbun tools via Model Context Protocol.
 //!
 //! # Quick Start
@@ -22,11 +23,17 @@
 //! server.launch(ServerTransportConfig::Stdio).unwrap();
 //! ```
 
+/// Server capability definitions.
 pub mod capabilities;
+/// Error types for MCP server operations.
 pub mod error;
+/// MCP request handler with initialization state machine.
 pub mod handler;
+/// MCP server and builder.
 pub mod server;
-pub mod tool_bridge;
+/// Internal tool bridge (file loader integration).
+pub(crate) mod tool_bridge;
+/// Transport implementations (stdio, SSE).
 pub mod transport;
 
 pub use capabilities::*;

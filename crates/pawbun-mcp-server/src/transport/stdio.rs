@@ -18,6 +18,7 @@ pub struct StdioServerTransport {
 }
 
 impl StdioServerTransport {
+    /// Creates a new stdio transport wrapping stdin/stdout.
     pub fn new() -> Self {
         Self {
             stdin: BufReader::new(std::io::stdin()),

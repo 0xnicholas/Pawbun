@@ -29,11 +29,17 @@ use std::pin::Pin;
 /// Configuration for the SSE server transport.
 #[derive(Debug, Clone)]
 pub struct SseServerConfig {
+    /// Server bind address (e.g. "127.0.0.1:3000").
     pub bind_addr: String,
+    /// Allowed CORS origins.
     pub cors_origins: Vec<String>,
+    /// Heartbeat interval in milliseconds.
     pub heartbeat_interval_ms: u64,
+    /// Heartbeat text payload.
     pub heartbeat_text: String,
+    /// Maximum concurrent SSE connections.
     pub max_connections: usize,
+    /// Session time-to-live duration.
     pub session_ttl: Duration,
 }
 
@@ -51,6 +57,7 @@ impl Default for SseServerConfig {
 }
 
 impl SseServerConfig {
+    /// Creates a new SSE server config with the given bind address.
     pub fn new(bind_addr: impl Into<String>) -> Self {
         Self {
             bind_addr: bind_addr.into(),
@@ -58,22 +65,26 @@ impl SseServerConfig {
         }
     }
 
+    /// Sets allowed CORS origins.
     pub fn with_cors_origins(mut self, origins: Vec<String>) -> Self {
         self.cors_origins = origins;
         self
     }
 
+    /// Sets heartbeat interval and text.
     pub fn with_heartbeat(mut self, interval_ms: u64, text: impl Into<String>) -> Self {
         self.heartbeat_interval_ms = interval_ms;
         self.heartbeat_text = text.into();
         self
     }
 
+    /// Sets maximum concurrent connections.
     pub fn with_max_connections(mut self, max: usize) -> Self {
         self.max_connections = max;
         self
     }
 
+    /// Sets session time-to-live.
     pub fn with_session_ttl(mut self, ttl: Duration) -> Self {
         self.session_ttl = ttl;
         self

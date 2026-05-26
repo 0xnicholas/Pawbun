@@ -350,6 +350,7 @@ impl DefaultFileLoader {
     }
 
     /// 默认最大下载大小：100 MiB。
+    #[allow(dead_code)]
     const DEFAULT_MAX_DOWNLOAD_BYTES: u64 = 100 * 1024 * 1024;
 
     #[cfg(feature = "url-source")]
