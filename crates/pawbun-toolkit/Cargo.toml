@@ -54,6 +54,14 @@ name = "openai_embedding"
 path = "examples/openai_embedding.rs"
 required-features = ["http"]
 
+[[example]]
+name = "basic_toolkit"
+path = "examples/basic_toolkit.rs"
+
+[[example]]
+name = "custom_tool"
+path = "examples/custom_tool.rs"
+
 [[bench]]
 name = "toolkit"
 harness = false

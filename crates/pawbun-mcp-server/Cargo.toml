@@ -29,6 +29,15 @@ tempfile = "3"
 tokio = { version = "1", features = ["rt", "macros", "time"] }
 criterion = { version = "0.5", features = ["html_reports"] }
 
+[[example]]
+name = "stdio_server"
+path = "examples/stdio_server.rs"
+
+[[example]]
+name = "sse_server"
+path = "examples/sse_server.rs"
+required-features = ["http"]
+
 [[bench]]
 name = "handler"
 harness = false
