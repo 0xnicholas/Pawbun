@@ -25,11 +25,17 @@ pub enum MediaType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ImageFormat {
+    /// PNG image.
     Png,
+    /// JPEG image.
     Jpeg,
+    /// GIF image.
     Gif,
+    /// WebP image.
     Webp,
+    /// SVG image.
     Svg,
+    /// BMP image.
     Bmp,
 }
 
@@ -37,10 +43,15 @@ pub enum ImageFormat {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum AudioFormat {
+    /// MP3 audio.
     Mp3,
+    /// WAV audio.
     Wav,
+    /// Ogg Vorbis audio.
     Ogg,
+    /// AAC audio.
     Aac,
+    /// FLAC audio.
     Flac,
 }
 
@@ -48,9 +59,13 @@ pub enum AudioFormat {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum VideoFormat {
+    /// MP4 video.
     Mp4,
+    /// WebM video.
     Webm,
+    /// AVI video.
     Avi,
+    /// QuickTime/MOV video.
     Mov,
 }
 

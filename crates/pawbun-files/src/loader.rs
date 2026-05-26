@@ -11,35 +11,52 @@ use crate::media::{ImageFormat, MediaType};
 /// Error type for file loading operations.
 #[derive(thiserror::Error, Debug, Clone, PartialEq)]
 pub enum LoadError {
+    /// IO error (file system, network, etc.).
     #[error("IO error: {message} (kind: {kind:?})")]
     Io {
+        /// Error message.
         message: String,
+        /// IO error kind.
         kind: std::io::ErrorKind,
     },
 
+    /// Unsupported file format.
     #[error("unsupported format: {0}")]
     UnsupportedFormat(String),
 
+    /// Network error during remote fetch.
     #[error("network error: {0}")]
     Network(String),
 
+    /// Path traversal security violation detected.
     #[error("path traversal detected: {0}")]
     PathTraversal(String),
 
+    /// Media type mismatch between expected and detected.
     #[error("media type mismatch: expected {expected}, got {actual}")]
     TypeMismatch {
+        /// Expected media type.
         expected: MediaType,
+        /// Detected media type.
         actual: MediaType,
     },
 
+    /// File size exceeds configured limit.
     #[error("size exceeded: {actual} bytes (limit {limit})")]
-    SizeExceeded { actual: u64, limit: u64 },
+    SizeExceeded {
+        /// Actual file size in bytes.
+        actual: u64,
+        /// Configured size limit in bytes.
+        limit: u64,
+    },
 }
 
 /// Result of loading a file, containing content, metadata, and possible warnings.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct LoadedContent {
+    /// Parsed media content (text, image, etc.).
     pub content: MediaContent,
+    /// File metadata (name, size, MIME type, modification time).
     pub metadata: FileMetadata,
     /// Non-fatal warnings produced during loading and post-processing.
     pub warnings: Vec<String>,
@@ -74,8 +91,10 @@ pub trait FileLoader: std::fmt::Debug + Send + Sync {
 /// **MSRV**: Requires Rust 1.75+ (native `async fn` in trait).
 #[allow(async_fn_in_trait)]
 pub trait AsyncFileLoader: FileLoader {
+    /// Asynchronously loads a single file.
     async fn load_async(&self, file: &File) -> Result<LoadedContent, LoadError>;
 
+    /// Asynchronously batch loads multiple files.
     async fn load_batch_async<'a>(
         &self,
         files: &'a [File],
@@ -98,6 +117,7 @@ pub trait AsyncFileLoader: FileLoader {
         }
     }
 
+    /// Asynchronously retrieves file metadata only.
     async fn metadata_async(&self, file: &File) -> Result<FileMetadata, LoadError>;
 }
 
@@ -108,16 +128,20 @@ pub trait AsyncFileLoader: FileLoader {
 /// **Async support**: `AsyncFileLoader` methods are always available. When the `tokio`
 /// feature is enabled, true async filesystem I/O is used; otherwise the sync fallback
 /// runs inside the async wrapper (the method is still `async`, but filesystem calls block).
+/// Default file loader supporting local, URL, and bytes sources.
 #[derive(Debug, Clone)]
 pub struct DefaultFileLoader {
+    /// Optional base directory for sandboxing local file access.
     pub base_dir: Option<PathBuf>,
 }
 
 impl DefaultFileLoader {
+    /// Creates a new file loader without a sandbox.
     pub fn new() -> Self {
         Self { base_dir: None }
     }
 
+    /// Creates a new file loader with a base directory sandbox.
     pub fn with_base_dir<P: Into<PathBuf>>(base_dir: P) -> Self {
         Self {
             base_dir: Some(base_dir.into()),

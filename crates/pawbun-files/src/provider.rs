@@ -12,15 +12,26 @@ use crate::media::MediaType;
 /// Error type for provider formatting operations.
 #[derive(thiserror::Error, Debug, Clone, PartialEq)]
 pub enum FormatError {
+    /// Provider does not support this media type.
     #[error("unsupported media type for {provider}: {media_type}")]
     UnsupportedMediaType {
+        /// Provider name.
         provider: String,
+        /// Media type that is not supported.
         media_type: MediaType,
     },
+    /// Content size exceeds provider limit.
     #[error("content too large for {provider}: {size} bytes")]
-    ContentTooLarge { provider: String, size: u64 },
+    ContentTooLarge {
+        /// Provider name.
+        provider: String,
+        /// Actual content size in bytes.
+        size: u64,
+    },
+    /// JSON serialization failed.
     #[error("serialization failed: {0}")]
     Serialization(String),
+    /// File loading failed before formatting.
     #[error("load failed: {0}")]
     Load(String),
 }

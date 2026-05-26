@@ -80,14 +80,33 @@ impl Default for AutoStrategy {
 /// Constraint validation error.
 #[derive(thiserror::Error, Debug, Clone, PartialEq)]
 pub enum ConstraintError {
+    /// File size exceeds configured limit.
     #[error("size {actual} exceeds limit {limit}")]
-    SizeExceeded { actual: u64, limit: u64 },
+    SizeExceeded {
+        /// Actual file size in bytes.
+        actual: u64,
+        /// Configured size limit in bytes.
+        limit: u64,
+    },
+    /// Media type not in allowed whitelist.
     #[error("media type {0} not in allowed list")]
     TypeNotAllowed(MediaType),
+    /// Image dimensions exceed configured limits.
     #[error("image dimensions {width}x{height} exceed limit")]
-    ImageDimensionsExceeded { width: u32, height: u32 },
+    ImageDimensionsExceeded {
+        /// Actual image width in pixels.
+        width: u32,
+        /// Actual image height in pixels.
+        height: u32,
+    },
+    /// Audio/video duration exceeds configured limit.
     #[error("duration {actual}s exceeds limit {limit}s")]
-    DurationExceeded { actual: f64, limit: f64 },
+    DurationExceeded {
+        /// Actual duration in seconds.
+        actual: f64,
+        /// Configured duration limit in seconds.
+        limit: f64,
+    },
 }
 
 /// Downgrades an image according to the given `AutoStrategy`.

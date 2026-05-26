@@ -14,6 +14,7 @@ pub mod base64_bytes {
     use super::*;
     use base64::Engine;
 
+    /// Serializes `Bytes` as a Base64-encoded string.
     pub fn serialize<S>(bytes: &Bytes, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -25,6 +26,7 @@ pub mod base64_bytes {
     /// 最大允许的 Base64 字符串长度（约 140 MiB，对应约 105 MiB 原始数据）。
     const MAX_BASE64_LEN: usize = 140 * 1024 * 1024;
 
+    /// Deserializes a Base64-encoded string into `Bytes`.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Bytes, D::Error>
     where
         D: Deserializer<'de>,
@@ -63,23 +65,30 @@ pub enum MediaContent {
     Binary(BinaryContent),
 }
 
+/// Text content with optional encoding metadata.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TextContent {
+    /// Text content.
     pub text: String,
     /// Text encoding (usually UTF-8).
     pub encoding: Option<String>,
 }
 
+/// Image content with dimensions and format.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ImageContent {
     /// Raw image bytes (serialized as Base64 string; internally reference-counted, cheap clone).
     #[serde(with = "base64_bytes")]
     pub bytes: Bytes,
+    /// Image format (PNG, JPEG, etc.).
     pub format: ImageFormat,
+    /// Image width in pixels, if known.
     pub width: Option<u32>,
+    /// Image height in pixels, if known.
     pub height: Option<u32>,
 }
 
+/// PDF document content with optional page count and text preview.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PdfContent {
     /// Raw PDF bytes (serialized as Base64 string; internally reference-counted, cheap clone).
@@ -91,11 +100,13 @@ pub struct PdfContent {
     pub text_preview: Option<String>,
 }
 
+/// Audio content with duration and sample rate.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AudioContent {
     /// Raw audio bytes (serialized as Base64 string; internally reference-counted, cheap clone).
     #[serde(with = "base64_bytes")]
     pub bytes: Bytes,
+    /// Audio format (MP3, WAV, etc.).
     pub format: AudioFormat,
     /// Audio duration in seconds.
     pub duration: Option<f64>,
@@ -103,11 +114,13 @@ pub struct AudioContent {
     pub sample_rate: Option<u32>,
 }
 
+/// Video content with duration and optional thumbnail.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct VideoContent {
     /// Raw video bytes (serialized as Base64 string; internally reference-counted, cheap clone).
     #[serde(with = "base64_bytes")]
     pub bytes: Bytes,
+    /// Video format (MP4, WebM, etc.).
     pub format: VideoFormat,
     /// Video duration in seconds.
     pub duration: Option<f64>,
@@ -115,6 +128,7 @@ pub struct VideoContent {
     pub thumbnail: Option<ImageContent>,
 }
 
+/// Unknown or unrecognized binary content.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BinaryContent {
     /// Raw binary bytes (serialized as Base64 string; internally reference-counted, cheap clone).

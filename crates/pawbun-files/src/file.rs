@@ -133,11 +133,18 @@ impl File {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum FileSource {
     /// Local filesystem path.
-    Local { path: PathBuf },
+    Local {
+        /// Local file path.
+        path: PathBuf,
+    },
     /// Remote URL (HTTP/HTTPS).
-    Url { url: String },
+    Url {
+        /// Remote URL string.
+        url: String,
+    },
     /// In-memory byte data (reference-counted, cheap clone).
     Bytes {
+        /// Raw byte data (serialized as Base64).
         #[serde(with = "crate::content::base64_bytes")]
         data: Bytes,
     },

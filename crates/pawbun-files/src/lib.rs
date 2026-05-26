@@ -1,3 +1,4 @@
+#![deny(missing_docs)]
 //! File handling utilities for Pandaria multimodal inputs.
 //!
 //! `pawbun-files` provides a unified, type-safe, and extensible layer for
@@ -106,11 +107,17 @@
 //!     });
 //! ```
 
+/// File constraints (size, type, overflow mode).
 pub mod constraints;
+/// Media content types (text, image, audio, video, PDF, binary).
 pub mod content;
+/// File representation and sources.
 pub mod file;
+/// File loader traits and default implementation.
 pub mod loader;
+/// Media type definitions and detection.
 pub mod media;
+/// Provider formatting for LLM APIs.
 pub mod provider;
 
 // Re-export core types for ergonomic usage.
