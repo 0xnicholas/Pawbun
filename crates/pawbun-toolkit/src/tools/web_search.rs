@@ -107,8 +107,8 @@ impl Tool for WebSearchTool {
     }
 
     fn execute(&self, _input: &str) -> Result<ToolResult, ToolError> {
-        Err(ToolError::ExecutionFailed(
-            "WebSearchTool requires async execution. Use execute_async instead.".into(),
+        Err(ToolError::execution_failed(
+            "WebSearchTool requires async execution. Use execute_async instead.",
         ))
     }
 
@@ -125,7 +125,7 @@ impl AsyncTool for WebSearchTool {
         let query = parsed
             .get("query")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'query' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'query' field"))?;
 
         let max_results = parsed
             .get("max_results")
@@ -134,10 +134,10 @@ impl AsyncTool for WebSearchTool {
             .unwrap_or(self.max_results);
 
         #[cfg(not(test))]
-        url_utils::validate_url(&self.endpoint).map_err(ToolError::InvalidInput)?;
+        url_utils::validate_url(&self.endpoint).map_err(ToolError::invalid_input)?;
         #[cfg(test)]
         if !self.skip_url_validation {
-            url_utils::validate_url(&self.endpoint).map_err(ToolError::InvalidInput)?;
+            url_utils::validate_url(&self.endpoint).map_err(ToolError::invalid_input)?;
         }
 
         let mut req = self
@@ -152,11 +152,11 @@ impl AsyncTool for WebSearchTool {
         let resp = req
             .send()
             .await
-            .map_err(|e| ToolError::ExecutionFailed(format!("HTTP request failed: {e}")))?;
+            .map_err(|e| ToolError::execution_failed(format!("HTTP request failed: {e}")))?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| {
-            ToolError::ExecutionFailed(format!("failed to read response body: {e}"))
+            ToolError::execution_failed(format!("failed to read response body: {e}"))
         })?;
 
         Ok(ToolResult {
@@ -194,6 +194,7 @@ mod tests {
         let tool = WebSearchTool::with_client_for_test(
             format!("{}/search", mock_server.uri()),
             reqwest::Client::builder()
+                .no_proxy()
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap(),
@@ -222,6 +223,7 @@ mod tests {
             let mut t = WebSearchTool::with_client_for_test(
                 format!("{}/search", mock_server.uri()),
                 reqwest::Client::builder()
+                .no_proxy()
                     .timeout(std::time::Duration::from_secs(30))
                     .build()
                     .unwrap(),
@@ -250,6 +252,7 @@ mod tests {
             let mut t = WebSearchTool::with_client_for_test(
                 format!("{}/search", mock_server.uri()),
                 reqwest::Client::builder()
+                .no_proxy()
                     .timeout(std::time::Duration::from_secs(30))
                     .build()
                     .unwrap(),
@@ -275,6 +278,7 @@ mod tests {
         let tool = WebSearchTool::with_client_for_test(
             "http://example.com/search",
             reqwest::Client::builder()
+                .no_proxy()
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap(),

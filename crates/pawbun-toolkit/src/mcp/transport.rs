@@ -155,6 +155,11 @@ mod sse {
     impl SseTransport {
         /// Creates a new SSE transport and initiates the SSE handshake in a background Tokio task.
         pub fn new(url: impl Into<String>) -> Result<Self, TransportError> {
+            Self::new_with_retry(url, 5, 1_000)
+        }
+
+        /// Creates a new SSE transport with configurable retry parameters.
+        pub fn new_with_retry(url: impl Into<String>, max_retries: u32, initial_backoff_ms: u64) -> Result<Self, TransportError> {
             let url = url.into();
 
             #[cfg(not(test))]
@@ -169,6 +174,7 @@ mod sse {
             let client = reqwest::Client::builder()
                 .connect_timeout(Duration::from_secs(30))
                 .redirect(reqwest::redirect::Policy::limited(10))
+                .no_proxy()
                 .build()
                 .map_err(|e| TransportError::Io {
                     message: format!("failed to build HTTP client: {e}"),
@@ -183,7 +189,7 @@ mod sse {
             let client_task = client.clone();
 
             runtime.spawn(async move {
-                sse_reader_loop(client_task, url, post_url_tx, routes_task, cancel_rx).await;
+                sse_reader_loop(client_task, url, post_url_tx, routes_task, cancel_rx, max_retries, initial_backoff_ms).await;
             });
 
             Ok(Self {
@@ -328,9 +334,12 @@ mod sse {
         post_url_tx: tokio::sync::watch::Sender<Option<String>>,
         routes: Arc<tokio::sync::Mutex<HashMap<Option<JsonRpcId>, tokio::sync::oneshot::Sender<JsonRpcResponse>>>>,
         mut cancel_rx: tokio::sync::watch::Receiver<bool>,
+        max_retries: u32,
+        initial_backoff_ms: u64,
     ) {
-        let mut backoff = Duration::from_secs(1);
+        let mut backoff = Duration::from_millis(initial_backoff_ms);
         let max_backoff = Duration::from_secs(60);
+        let mut retry_count = 0u32;
 
         loop {
             tokio::select! {
@@ -353,10 +362,22 @@ mod sse {
                         Ok(()) => {
                             // Graceful close. Reset backoff and retry immediately
                             // in case the server closed temporarily.
-                            backoff = Duration::from_secs(1);
+                            backoff = Duration::from_millis(initial_backoff_ms);
+                            retry_count = 0;
                         }
                         Err(e) => {
-                            tracing::warn!(error = %e, backoff = ?backoff, "SSE connection error, will retry");
+                            retry_count += 1;
+                            if max_retries > 0 && retry_count > max_retries {
+                                #[cfg(feature = "tracing")]
+                            tracing::error!(error = %e, retries = retry_count, "SSE connection error, max retries exceeded");
+                            #[cfg(not(feature = "tracing"))]
+                            eprintln!("SSE connection error, max retries exceeded: {e}");
+                                break;
+                            }
+                            #[cfg(feature = "tracing")]
+                            tracing::warn!(error = %e, backoff = ?backoff, retry = retry_count, "SSE connection error, will retry");
+                            #[cfg(not(feature = "tracing"))]
+                            eprintln!("SSE connection error, will retry (backoff={backoff:?}, retry={retry_count}): {e}");
                             tokio::time::sleep(backoff).await;
                             backoff = std::cmp::min(backoff * 2, max_backoff);
                         }

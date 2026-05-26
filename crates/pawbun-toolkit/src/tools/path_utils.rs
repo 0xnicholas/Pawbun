@@ -30,7 +30,7 @@ pub fn resolve_sandbox_path(base_dir: Option<&Path>, input: &str) -> Result<Path
         .map_err(|e| ToolError::Io { message: format!("invalid path: {e}"), kind: e.kind() })?;
 
     if !target.starts_with(&base) {
-        return Err(ToolError::InvalidInput("path traversal detected".into()));
+        return Err(ToolError::invalid_input("path traversal detected"));
     }
 
     Ok(target)
@@ -65,7 +65,7 @@ pub fn resolve_write_path(base_dir: Option<&Path>, input: &str) -> Result<PathBu
             std::path::Component::CurDir => {}
             std::path::Component::ParentDir => {
                 if !normalized.pop() {
-                    return Err(ToolError::InvalidInput("path traversal detected".into()));
+                    return Err(ToolError::invalid_input("path traversal detected"));
                 }
             }
             std::path::Component::Normal(c) => {
@@ -75,7 +75,7 @@ pub fn resolve_write_path(base_dir: Option<&Path>, input: &str) -> Result<PathBu
     }
 
     if normalized.is_absolute() && !normalized.starts_with(&base) {
-        return Err(ToolError::InvalidInput("path traversal detected".into()));
+        return Err(ToolError::invalid_input("path traversal detected"));
     }
 
     Ok(normalized)

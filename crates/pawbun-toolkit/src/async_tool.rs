@@ -62,7 +62,7 @@ pub trait AsyncTool: Tool {
     /// 默认将 `Value` 序列化为字符串后调用 [`execute_async`](Self::execute_async)。
     async fn execute_value_async(&self, input: Value) -> Result<ToolResult, ToolError> {
         let raw =
-            serde_json::to_string(&input).map_err(|e| ToolError::Serialization(e.to_string()))?;
+            serde_json::to_string(&input).map_err(|e| ToolError::serialization(e.to_string()))?;
         self.execute_async(&raw).await
     }
 }
@@ -88,7 +88,7 @@ pub trait AsyncTool: Tool {
 ///         Box::pin(async move {
 ///             tokio::task::spawn_blocking(move || f())
 ///                 .await
-///                 .unwrap_or_else(|_| Err(ToolError::ExecutionFailed("blocking task panicked".into())))
+///                 .unwrap_or_else(|_| Err(ToolError::execution_failed("blocking task panicked")))
 ///         })
 ///     }
 /// }
@@ -130,7 +130,7 @@ impl BlockingExecutor for TokioExecutor {
     ) -> Pin<Box<dyn Future<Output = Result<ToolResult, ToolError>> + Send>> {
         Box::pin(async move {
             tokio::task::spawn_blocking(f).await.unwrap_or_else(|_| {
-                Err(ToolError::ExecutionFailed("blocking task panicked".into()))
+                Err(ToolError::execution_failed("blocking task panicked"))
             })
         })
     }

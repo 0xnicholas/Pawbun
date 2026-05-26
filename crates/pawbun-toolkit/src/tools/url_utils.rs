@@ -74,6 +74,7 @@ pub fn build_safe_client() -> Result<reqwest::Client, reqwest::Error> {
     reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::limited(10))
+        .no_proxy()
         .build()
 }
 

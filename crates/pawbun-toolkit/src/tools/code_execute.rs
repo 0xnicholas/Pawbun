@@ -58,10 +58,9 @@ impl Tool for CodeExecuteTool {
     }
 
     fn execute(&self, _input: &str) -> Result<ToolResult, ToolError> {
-        Err(ToolError::ExecutionFailed(
+        Err(ToolError::execution_failed(
             "CodeExecuteTool is a placeholder. Actual code execution requires an external sandbox \
-             (e.g. Docker, Firejail, e2b). Do NOT execute untrusted code without proper isolation."
-                .into(),
+             (e.g. Docker, Firejail, e2b). Do NOT execute untrusted code without proper isolation.",
         ))
     }
 }

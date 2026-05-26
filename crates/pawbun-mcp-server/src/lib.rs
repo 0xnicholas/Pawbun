@@ -22,11 +22,13 @@
 //! server.launch(ServerTransportConfig::Stdio).unwrap();
 //! ```
 
+pub mod capabilities;
 pub mod error;
 pub mod handler;
 pub mod server;
 pub mod tool_bridge;
 pub mod transport;
 
+pub use capabilities::*;
 pub use error::McpServerError;
 pub use server::{McpServer, McpServerBuilder};

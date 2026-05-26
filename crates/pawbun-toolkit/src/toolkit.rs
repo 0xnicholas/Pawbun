@@ -114,7 +114,7 @@ impl ToolKit {
         drop(done_tx);
         let timed_out = timeout_handle
             .join()
-            .map_err(|_| ToolError::ExecutionFailed("timeout monitor thread panicked".into()))?;
+            .map_err(|_| ToolError::execution_failed("timeout monitor thread panicked"))?;
 
         if timed_out {
             return Err(ToolError::Timeout(timeout_ms));
@@ -442,7 +442,7 @@ mod tests {
         > {
             Box::pin(async move {
                 tokio::task::spawn_blocking(f).await.unwrap_or_else(|_| {
-                    Err(ToolError::ExecutionFailed("blocking task panicked".into()))
+                    Err(ToolError::execution_failed("blocking task panicked"))
                 })
             })
         }

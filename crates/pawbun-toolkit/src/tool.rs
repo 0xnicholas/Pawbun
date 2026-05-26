@@ -66,7 +66,7 @@ pub trait Tool: std::fmt::Debug + Send + Sync {
     /// 若工具内部已使用 serde 反序列化，可直接覆盖此默认实现以避免双重序列化。
     fn execute_value(&self, input: Value) -> Result<ToolResult, ToolError> {
         let raw =
-            serde_json::to_string(&input).map_err(|e| ToolError::Serialization(e.to_string()))?;
+            serde_json::to_string(&input).map_err(|e| ToolError::serialization(e.to_string()))?;
         self.execute(&raw)
     }
 

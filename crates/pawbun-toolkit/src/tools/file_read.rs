@@ -71,16 +71,16 @@ impl Tool for FileReadTool {
         let path = parsed
             .get("path")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'path' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'path' field"))?;
 
         let target = self.resolve_path(path)?;
 
         // Check file size before reading, if a limit is configured.
         if let Some(max_size) = self.max_size_bytes {
             let metadata = std::fs::metadata(&target)
-                .map_err(|e| ToolError::ExecutionFailed(e.to_string()))?;
+                .map_err(|e| ToolError::execution_failed(e.to_string()))?;
             if metadata.len() > max_size as u64 {
-                return Err(ToolError::ExecutionFailed(format!(
+                return Err(ToolError::execution_failed(format!(
                     "file size {} exceeds maximum of {}",
                     metadata.len(),
                     max_size
@@ -89,7 +89,7 @@ impl Tool for FileReadTool {
         }
 
         let content = std::fs::read_to_string(&target)
-            .map_err(|e| ToolError::ExecutionFailed(e.to_string()))?;
+            .map_err(|e| ToolError::execution_failed(e.to_string()))?;
 
         Ok(ToolResult {
             success: true,

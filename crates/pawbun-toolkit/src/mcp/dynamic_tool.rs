@@ -57,21 +57,21 @@ impl Tool for DynamicTool {
                 None
             } else {
                 Some(crate::json_utils::parse(input).map_err(|e| {
-                    ToolError::Serialization(format!("invalid JSON arguments: {e}"))
+                    ToolError::serialization(format!("invalid JSON arguments: {e}"))
                 })?)
             };
 
         let arc = self.session.upgrade().ok_or_else(|| {
-            ToolError::ExecutionFailed("MCP session has been closed".into())
+            ToolError::execution_failed("MCP session has been closed")
         })?;
 
         let mut session = arc
             .lock()
-            .map_err(|e| ToolError::ExecutionFailed(format!("session mutex poisoned: {e}")))?;
+            .map_err(|e| ToolError::execution_failed(format!("session mutex poisoned: {e}")))?;
 
         let call_result = session
             .call_tool(&self.name, arguments)
-            .map_err(|e| ToolError::ExecutionFailed(format!("MCP call failed: {e}")))?;
+            .map_err(|e| ToolError::execution_failed(format!("MCP call failed: {e}")))?;
 
         // Concatenate all text content items.
         let mut texts = Vec::new();

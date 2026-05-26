@@ -69,7 +69,7 @@ impl Tool for CsvQueryTool {
         let csv_text = parsed
             .get("csv")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'csv' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'csv' field"))?;
 
         let has_header = parsed
             .get("has_header")
@@ -95,7 +95,7 @@ impl Tool for CsvQueryTool {
         let headers: Option<Vec<String>> = if has_header {
             reader
                 .headers()
-                .map_err(|e| ToolError::ExecutionFailed(format!("CSV header error: {e}")))?
+                .map_err(|e| ToolError::execution_failed(format!("CSV header error: {e}")))?
                 .iter()
                 .map(String::from)
                 .collect::<Vec<_>>()
@@ -113,7 +113,7 @@ impl Tool for CsvQueryTool {
             }
 
             let record =
-                record.map_err(|e| ToolError::ExecutionFailed(format!("CSV parse error: {e}")))?;
+                record.map_err(|e| ToolError::execution_failed(format!("CSV parse error: {e}")))?;
 
             if let Some(ref hdrs) = headers {
                 let mut obj = serde_json::Map::new();
@@ -136,7 +136,7 @@ impl Tool for CsvQueryTool {
         Ok(ToolResult {
             success: true,
             content: serde_json::to_string_pretty(&rows)
-                .map_err(|e| ToolError::Serialization(e.to_string()))?,
+                .map_err(|e| ToolError::serialization(e.to_string()))?,
             metadata: Some(json!({"row_count": rows.len(), "has_header": has_header})),
             elapsed_ms: None,
         })

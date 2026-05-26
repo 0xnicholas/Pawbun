@@ -49,21 +49,21 @@ impl Tool for FileReadBridgeTool {
 
     fn execute(&self, input: &str) -> Result<ToolResult, ToolError> {
         let parsed: serde_json::Value =
-            serde_json::from_str(input).map_err(|e| ToolError::Serialization(e.to_string()))?;
+            serde_json::from_str(input).map_err(|e| ToolError::serialization(e.to_string()))?;
 
         let path = parsed
             .get("path")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'path' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'path' field"))?;
 
         let file = File::from_path(path);
         let loaded = self
             .loader
             .load(&file)
-            .map_err(|e| ToolError::ExecutionFailed(e.to_string()))?;
+            .map_err(|e| ToolError::execution_failed(e.to_string()))?;
 
         let content_json = serde_json::to_string(&loaded.content)
-            .map_err(|e| ToolError::Serialization(e.to_string()))?;
+            .map_err(|e| ToolError::serialization(e.to_string()))?;
 
         Ok(ToolResult {
             success: true,
@@ -101,18 +101,18 @@ impl Tool for FileListBridgeTool {
 
     fn execute(&self, input: &str) -> Result<ToolResult, ToolError> {
         let parsed: serde_json::Value =
-            serde_json::from_str(input).map_err(|e| ToolError::Serialization(e.to_string()))?;
+            serde_json::from_str(input).map_err(|e| ToolError::serialization(e.to_string()))?;
 
         let path = parsed
             .get("path")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'path' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'path' field"))?;
 
         let file = File::from_path(path);
         let meta = self
             .loader
             .metadata(&file)
-            .map_err(|e| ToolError::ExecutionFailed(e.to_string()))?;
+            .map_err(|e| ToolError::execution_failed(e.to_string()))?;
 
         let meta_json = json!({
             "name": meta.name,

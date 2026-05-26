@@ -64,19 +64,19 @@ impl Tool for DirectoryListTool {
         let path = parsed
             .get("path")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'path' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'path' field"))?;
 
         let target = self.resolve_path(path)?;
 
         let mut entries = Vec::new();
         let dir = std::fs::read_dir(&target)
-            .map_err(|e| ToolError::ExecutionFailed(format!("cannot read directory: {e}")))?;
+            .map_err(|e| ToolError::execution_failed(format!("cannot read directory: {e}")))?;
 
         for entry in dir {
-            let entry = entry.map_err(|e| ToolError::ExecutionFailed(e.to_string()))?;
+            let entry = entry.map_err(|e| ToolError::execution_failed(e.to_string()))?;
             let metadata = entry
                 .metadata()
-                .map_err(|e| ToolError::ExecutionFailed(e.to_string()))?;
+                .map_err(|e| ToolError::execution_failed(e.to_string()))?;
             let name = entry.file_name().to_string_lossy().into_owned();
             let entry_type = if metadata.is_dir() {
                 "directory"
@@ -112,7 +112,7 @@ impl Tool for DirectoryListTool {
         Ok(ToolResult {
             success: true,
             content: serde_json::to_string_pretty(&entries)
-                .map_err(|e| ToolError::Serialization(e.to_string()))?,
+                .map_err(|e| ToolError::serialization(e.to_string()))?,
             metadata: Some(json!({"path": target.to_string_lossy(), "count": entries.len()})),
             elapsed_ms: None,
         })

@@ -96,8 +96,8 @@ impl Tool for WebFetchTool {
     fn execute(&self, _input: &str) -> Result<ToolResult, ToolError> {
         // 同步上下文下，WebFetchTool 不支持阻塞式 HTTP 请求。
         // 调用方应通过 AsyncToolExecutor 在异步上下文中使用此工具。
-        Err(ToolError::ExecutionFailed(
-            "WebFetchTool requires async execution. Use execute_async instead.".into(),
+        Err(ToolError::execution_failed(
+            "WebFetchTool requires async execution. Use execute_async instead.",
         ))
     }
 
@@ -114,7 +114,7 @@ impl AsyncTool for WebFetchTool {
         let url = parsed
             .get("url")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'url' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'url' field"))?;
 
         let max_length = parsed
             .get("max_length")
@@ -123,10 +123,10 @@ impl AsyncTool for WebFetchTool {
             .or(self.max_length);
 
         #[cfg(not(test))]
-        url_utils::validate_url(url).map_err(ToolError::InvalidInput)?;
+        url_utils::validate_url(url).map_err(ToolError::invalid_input)?;
         #[cfg(test)]
         if !self.skip_url_validation {
-            url_utils::validate_url(url).map_err(ToolError::InvalidInput)?;
+            url_utils::validate_url(url).map_err(ToolError::invalid_input)?;
         }
 
         let resp = self
@@ -134,11 +134,11 @@ impl AsyncTool for WebFetchTool {
             .get(url)
             .send()
             .await
-            .map_err(|e| ToolError::ExecutionFailed(format!("HTTP request failed: {e}")))?;
+            .map_err(|e| ToolError::execution_failed(format!("HTTP request failed: {e}")))?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| {
-            ToolError::ExecutionFailed(format!("failed to read response body: {e}"))
+            ToolError::execution_failed(format!("failed to read response body: {e}"))
         })?;
 
         let content = match max_length {
@@ -177,6 +177,7 @@ mod tests {
 
         let tool = WebFetchTool::with_client_for_test(
             reqwest::Client::builder()
+                .no_proxy()
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap(),
@@ -202,6 +203,7 @@ mod tests {
         let tool = {
             let mut t = WebFetchTool::with_client_for_test(
                 reqwest::Client::builder()
+                .no_proxy()
                     .timeout(std::time::Duration::from_secs(30))
                     .build()
                     .unwrap(),
@@ -228,6 +230,7 @@ mod tests {
 
         let tool = WebFetchTool::with_client_for_test(
             reqwest::Client::builder()
+                .no_proxy()
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap(),

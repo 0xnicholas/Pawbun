@@ -78,19 +78,19 @@ impl Tool for FileWriteTool {
         let path = parsed
             .get("path")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'path' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'path' field"))?;
 
         let content = parsed
             .get("content")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'content' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'content' field"))?;
 
         let target = self.resolve_path(path)?;
 
         // 自动创建父目录
         if let Some(parent) = target.parent() {
             std::fs::create_dir_all(parent).map_err(|e| {
-                ToolError::ExecutionFailed(format!("failed to create directory: {e}"))
+                ToolError::execution_failed(format!("failed to create directory: {e}"))
             })?;
         }
 
@@ -99,14 +99,14 @@ impl Tool for FileWriteTool {
             let base = self.base_dir.as_deref().unwrap_or(Path::new("."));
             if let Ok(base_canonical) = base.canonicalize() {
                 if !canonical.starts_with(&base_canonical) {
-                    return Err(ToolError::InvalidInput(
-                        "path traversal detected (TOCTOU check failed)".into(),
+                    return Err(ToolError::invalid_input(
+                        "path traversal detected (TOCTOU check failed)",
                     ));
                 }
             }
         }
 
-        std::fs::write(&target, content).map_err(|e| ToolError::ExecutionFailed(e.to_string()))?;
+        std::fs::write(&target, content).map_err(|e| ToolError::execution_failed(e.to_string()))?;
 
         Ok(ToolResult {
             success: true,

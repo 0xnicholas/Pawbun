@@ -50,18 +50,18 @@ impl Tool for JsonQueryTool {
 
         let data = parsed
             .get("data")
-            .ok_or_else(|| ToolError::InvalidInput("missing 'data' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'data' field"))?;
 
         let query = parsed
             .get("query")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ToolError::InvalidInput("missing 'query' field".into()))?;
+            .ok_or_else(|| ToolError::invalid_input("missing 'query' field"))?;
 
         use jsonpath_rust::JsonPath;
 
         let results: Vec<serde_json::Value> = data
             .query(query)
-            .map_err(|e| ToolError::InvalidInput(format!("invalid JSONPath: {e}")))?
+            .map_err(|e| ToolError::invalid_input(format!("invalid JSONPath: {e}")))?
             .into_iter()
             .cloned()
             .collect();
@@ -69,7 +69,7 @@ impl Tool for JsonQueryTool {
         Ok(ToolResult {
             success: true,
             content: serde_json::to_string_pretty(&results)
-                .map_err(|e| ToolError::Serialization(e.to_string()))?,
+                .map_err(|e| ToolError::serialization(e.to_string()))?,
             metadata: Some(json!({"query": query, "match_count": results.len()})),
             elapsed_ms: None,
         })

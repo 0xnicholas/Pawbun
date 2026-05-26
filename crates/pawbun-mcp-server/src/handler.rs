@@ -35,15 +35,27 @@ pub(crate) struct RequestHandler {
     toolkit: ToolKit,
     server_info: ServerInfo,
     capabilities: Value,
+    protocol_version: String,
+    /// TODO: wire request_timeout wrapping into handle() for SSE/stdio transports.
+    #[allow(dead_code)]
+    request_timeout_ms: Option<u64>,
     initialized: bool,
 }
 
 impl RequestHandler {
-    pub fn new(toolkit: ToolKit, server_info: ServerInfo, capabilities: Value) -> Self {
+    pub fn new(
+        toolkit: ToolKit,
+        server_info: ServerInfo,
+        capabilities: Value,
+        protocol_version: String,
+        request_timeout_ms: Option<u64>,
+    ) -> Self {
         Self {
             toolkit,
             server_info,
             capabilities,
+            protocol_version,
+            request_timeout_ms,
             initialized: false,
         }
     }
@@ -82,7 +94,7 @@ impl RequestHandler {
             }
         };
 
-        if params.protocol_version != "2024-11-05" {
+        if params.protocol_version != self.protocol_version {
             return JsonRpcResponse::error(
                 req.id,
                 -32603,
@@ -96,7 +108,7 @@ impl RequestHandler {
         JsonRpcResponse::ok_result(
             req.id,
             InitializeResult {
-                protocol_version: "2024-11-05".into(),
+                protocol_version: self.protocol_version.clone(),
                 capabilities: self.capabilities.clone(),
                 server_info: self.server_info.clone(),
             },
@@ -212,6 +224,8 @@ mod tests {
                 version: "0.1.0".into(),
             },
             json!({"tools": {}}),
+            "2024-11-05".into(),
+            None,
         )
     }
 

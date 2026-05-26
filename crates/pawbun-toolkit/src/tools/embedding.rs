@@ -51,10 +51,9 @@ impl Tool for EmbeddingTool {
     }
 
     fn execute(&self, _input: &str) -> Result<ToolResult, ToolError> {
-        Err(ToolError::ExecutionFailed(
+        Err(ToolError::execution_failed(
             "EmbeddingTool is a placeholder. Actual embedding generation requires an external embedding service. \
-             Please use a concrete implementation that wraps your embedding provider's API."
-                .into(),
+             Please use a concrete implementation that wraps your embedding provider's API.",
         ))
     }
 }

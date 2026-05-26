@@ -50,10 +50,9 @@ impl Tool for VisionTool {
     }
 
     fn execute(&self, _input: &str) -> Result<ToolResult, ToolError> {
-        Err(ToolError::ExecutionFailed(
+        Err(ToolError::execution_failed(
             "VisionTool is a placeholder. Actual vision analysis requires an external multimodal model integration. \
-             Please use a concrete implementation that wraps your LLM provider's vision API."
-                .into(),
+             Please use a concrete implementation that wraps your LLM provider's vision API.",
         ))
     }
 }
