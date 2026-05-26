@@ -17,7 +17,9 @@ pub enum ToolError {
     /// 输入参数无效或格式错误。
     #[error("invalid input: {message}")]
     InvalidInput {
+        /// Error message describing the invalid input.
         message: String,
+        /// Underlying cause of the error, if any.
         #[source]
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
@@ -25,7 +27,9 @@ pub enum ToolError {
     /// 工具执行过程中发生不可恢复的错误。
     #[error("execution failed: {message}")]
     ExecutionFailed {
+        /// Error message describing the execution failure.
         message: String,
+        /// Underlying cause of the error, if any.
         #[source]
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
@@ -41,7 +45,9 @@ pub enum ToolError {
     /// 输入输出序列化或反序列化失败。
     #[error("serialization error: {message}")]
     Serialization {
+        /// Error message describing the serialization failure.
         message: String,
+        /// Underlying cause of the error, if any.
         #[source]
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
@@ -49,7 +55,9 @@ pub enum ToolError {
     /// IO error (file system, network, etc.).
     #[error("IO error: {message} (kind: {kind:?})")]
     Io {
+        /// Error message describing the IO failure.
         message: String,
+        /// IO error kind classification.
         kind: std::io::ErrorKind,
     },
 }

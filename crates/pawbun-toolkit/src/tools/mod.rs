@@ -4,18 +4,27 @@
 //! JSON 查询和 CSV 查询在启用对应 feature 时可用；
 //! Vision、Embedding、CodeExecute 为接口占位，需外部集成。
 
+/// Code execution tool interface (placeholder).
 pub mod code_execute;
+/// Directory listing tool.
 pub mod directory_list;
+/// File read tool.
 pub mod file_read;
+/// File write tool.
 pub mod file_write;
+/// Vision tool interface (placeholder).
 pub mod vision;
 
+/// CSV query tool (`csv` feature).
 #[cfg(feature = "csv")]
 pub mod csv_query;
+/// JSONPath query tool (`jsonpath` feature).
 #[cfg(feature = "jsonpath")]
 pub mod json_query;
+/// Web fetch tool (`http` feature).
 #[cfg(feature = "http")]
 pub mod web_fetch;
+/// Web search tool (`http` feature).
 #[cfg(feature = "http")]
 pub mod web_search;
 #[cfg(feature = "http")]

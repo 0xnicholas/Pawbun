@@ -1,3 +1,4 @@
+#![deny(missing_docs)]
 //! Agent tools for the Pandaria ecosystem.
 //!
 //! `pawbun-toolkit` provides the core [`Tool`] trait and [`ToolKit`] registry,
@@ -30,13 +31,21 @@
 //! - [`ToolError`] — Error type covering invalid input, execution failures,
 //!   missing tools, timeouts, and serialization issues.
 
+/// Async tool execution abstractions.
 pub mod async_tool;
+/// Error types for tool operations.
 pub mod error;
+/// MCP (Model Context Protocol) client adapters.
 pub mod mcp;
+/// Tool registry traits for discovery and execution.
 pub mod registry;
+/// Core [`Tool`] trait definition.
 pub mod tool;
+/// [`ToolKit`] registry implementation.
 pub mod toolkit;
+/// Built-in tool implementations.
 pub mod tools;
+/// Shared types: [`ToolParameter`], [`ToolResult`].
 pub mod types;
 
 mod json_utils;

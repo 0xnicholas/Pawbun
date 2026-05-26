@@ -15,12 +15,16 @@ use super::transport::StdioTransport;
 /// Error type for MCP operations.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum McpError {
+    /// Transport layer error (I/O, network, etc.).
     #[error("transport error: {0}")]
     Transport(#[from] TransportError),
+    /// JSON-RPC protocol error with message and code.
     #[error("JSON-RPC error: {0} (code {1})")]
     JsonRpc(String, i32),
+    /// MCP initialization handshake failed.
     #[error("initialization failed: {0}")]
     Initialization(String),
+    /// Serialization or deserialization error.
     #[error("serialization error: {0}")]
     Serialization(String),
 }
