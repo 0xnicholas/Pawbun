@@ -1,8 +1,12 @@
+#![deny(missing_docs)]
+//! Procedural macros for `pawbun-toolkit`.
+
 use proc_macro::TokenStream;
 use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, Ident, ItemImpl, LitStr, Token};
 
+/// Parsed arguments for `#[pawbun_tool(...)]`.
 struct ToolArgs {
     name: LitStr,
     description: LitStr,
