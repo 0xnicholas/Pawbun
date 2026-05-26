@@ -40,8 +40,9 @@ Modified files:
   crates/pawbun-toolkit/src/tool.rs                 — Add docs
   crates/pawbun-toolkit/src/async_tool.rs           — Add docs
   crates/pawbun-toolkit/src/registry.rs             — Add docs
-  crates/pawbun-toolkit/src/json_utils.rs           — Downgrade pub → pub(crate)
-  crates/pawbun-toolkit/src/mcp/mod.rs              — Downgrade internal modules
+  crates/pawbun-toolkit/src/json_utils.rs           — Verify already mod-private (no change)
+  crates/pawbun-toolkit/src/mcp/mod.rs              — Verify visibility (McpSession stays pub)
+  crates/pawbun-toolkit-macros/src/lib.rs           — Add #![deny(missing_docs)]
   crates/pawbun-files/src/lib.rs                    — Add #![deny(missing_docs)]
   crates/pawbun-files/src/loader.rs                 — Add docs, downgrade internals
   crates/pawbun-files/src/provider.rs               — Add docs, downgrade internals
@@ -106,6 +107,8 @@ fn benchmark_tool_descriptions(c: &mut Criterion) {
 - [ ] **Step 3: Add schema_build benchmark**
 
 ```rust
+use pawbun_mcp_core::parameters_to_schema;
+
 fn benchmark_schema_build(c: &mut Criterion) {
     let params = vec![
         ToolParameter {
@@ -123,7 +126,7 @@ fn benchmark_schema_build(c: &mut Criterion) {
     ];
     c.bench_function("schema_build/10_params", |b| {
         b.iter(|| {
-            let schema = build_input_schema(black_box(&params));
+            let schema = parameters_to_schema(black_box(&params));
             black_box(schema);
         })
     });
@@ -167,7 +170,7 @@ git commit -m "bench(toolkit): expand benchmarks with lookup_1000, descriptions,
 - Create: `crates/pawbun-files/benches/loader.rs`
 - Modify: `crates/pawbun-files/Cargo.toml` (add [[bench]] and dev-deps)
 
-- [ ] **Step 1: Add Criterion + tempfile to dev-dependencies**
+- [ ] **Step 1: Add Criterion + tempfile + wiremock to dev-dependencies**
 
 In `crates/pawbun-files/Cargo.toml`:
 ```toml
@@ -175,6 +178,7 @@ In `crates/pawbun-files/Cargo.toml`:
 criterion = { version = "0.5", features = ["html_reports"] }
 tempfile = "3"
 tokio = { version = "1", features = ["rt", "macros"] }
+wiremock = "0.6"
 
 [[bench]]
 name = "loader"
@@ -185,8 +189,7 @@ harness = false
 
 ```rust
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use pawbun_files::{DefaultFileLoader, FileLoader};
-use std::io::Write;
+use pawbun_files::{DefaultFileLoader, File, FileLoader, OpenAiFormat, ProviderFormat};
 
 fn benchmark_load_local(c: &mut Criterion) {
     let tmp = tempfile::tempdir().unwrap();
@@ -194,16 +197,36 @@ fn benchmark_load_local(c: &mut Criterion) {
     std::fs::write(&path, "hello world").unwrap();
     
     let loader = DefaultFileLoader::new();
+    let file = File::from_path(&path);
     c.bench_function("load_local/text", |b| {
         b.iter(|| {
-            let _ = loader.load_file(black_box(path.to_str().unwrap()));
+            let _ = loader.load(black_box(&file));
         })
     });
 }
 
-criterion_group!(benches, benchmark_load_local);
+fn benchmark_provider_format(c: &mut Criterion) {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("test.txt");
+    std::fs::write(&path, "hello world").unwrap();
+    
+    let loader = DefaultFileLoader::new();
+    let file = File::from_path(&path);
+    let loaded = loader.load(&file).unwrap();
+    let formatter = OpenAiFormat;
+    
+    c.bench_function("provider_format/openai/text", |b| {
+        b.iter(|| {
+            let _ = formatter.format_content(black_box(&loaded.content));
+        })
+    });
+}
+
+criterion_group!(benches, benchmark_load_local, benchmark_provider_format);
 criterion_main!(benches);
 ```
+
+> **说明**：`load_url_mock` 基准涉及 wiremock 的启动/停止开销，不适合作为微基准测试。Spec 中保留该项作为探索项，但 Plan 中暂不在 Criterion bench 中实现，改为在集成测试中验证 URL 加载性能。
 
 - [ ] **Step 3: Verify and run**
 
@@ -214,7 +237,7 @@ Run: `cargo bench -p pawbun-files`
 
 ```bash
 git add crates/pawbun-files/benches/loader.rs crates/pawbun-files/Cargo.toml
-git commit -m "bench(files): add file loading benchmark"
+git commit -m "bench(files): add file loading and provider format benchmarks"
 ```
 
 ### Task 1.3: Create pawbun-mcp-server benchmarks
@@ -241,25 +264,68 @@ harness = false
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pawbun_mcp_server::handler::RequestHandler;
 use pawbun_mcp_core::protocol::*;
-use pawbun_toolkit::ToolKit;
+use pawbun_toolkit::{ToolKit, Tool, ToolError, ToolParameter, ToolResult};
 use serde_json::json;
+use std::borrow::Cow;
 
-fn benchmark_tools_list(c: &mut Criterion) {
-    let mut toolkit = ToolKit::new();
-    // Register 100 no-op tools
-    for i in 0..100 {
-        toolkit.register(Box::new(pawbun_toolkit::FileReadTool::default()));
+#[derive(Debug)]
+struct EchoTool;
+
+impl Tool for EchoTool {
+    fn name(&self) -> &str { "echo" }
+    fn description(&self) -> &str { "Echoes input back." }
+    fn parameters(&self) -> Cow<'static, [ToolParameter]> {
+        Cow::Owned(vec![
+            ToolParameter {
+                name: "message".into(),
+                description: "Message to echo".into(),
+                required: true,
+                schema: json!({"type": "string"}),
+            },
+        ])
     }
+    fn execute(&self, input: &str) -> Result<ToolResult, ToolError> {
+        Ok(ToolResult {
+            success: true,
+            content: input.into(),
+            metadata: None,
+            elapsed_ms: None,
+        })
+    }
+}
+
+fn make_handler() -> RequestHandler {
+    let mut toolkit = ToolKit::new();
+    toolkit.register(Box::new(EchoTool));
     
-    let mut handler = RequestHandler::new(
+    RequestHandler::new(
         toolkit,
         ServerInfo { name: "bench".into(), version: "0.1.0".into() },
         json!({"tools": {}}),
         "2024-11-05".into(),
         None,
-    );
-    
-    // Initialize first
+    )
+}
+
+fn benchmark_initialize(c: &mut Criterion) {
+    c.bench_function("handler_initialize", |b| {
+        b.iter(|| {
+            let mut handler = make_handler();
+            let init = JsonRpcRequest::new(
+                1i64,
+                "initialize",
+                Some(json!({"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "bench", "version": "1.0"}})),
+            );
+            let resp = handler.handle(black_box(init));
+            black_box(resp);
+            let notif = JsonRpcRequest::notification("notifications/initialized", None);
+            handler.handle(black_box(notif));
+        })
+    });
+}
+
+fn benchmark_tools_list(c: &mut Criterion) {
+    let mut handler = make_handler();
     let init = JsonRpcRequest::new(
         1i64,
         "initialize",
@@ -270,7 +336,7 @@ fn benchmark_tools_list(c: &mut Criterion) {
     handler.handle(notif);
     
     let req = JsonRpcRequest::new(2i64, "tools/list", None);
-    c.bench_function("handler_tools_list/100", |b| {
+    c.bench_function("handler_tools_list/1", |b| {
         b.iter(|| {
             let resp = handler.handle(black_box(req.clone()));
             black_box(resp);
@@ -278,7 +344,31 @@ fn benchmark_tools_list(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, benchmark_tools_list);
+fn benchmark_tools_call(c: &mut Criterion) {
+    let mut handler = make_handler();
+    let init = JsonRpcRequest::new(
+        1i64,
+        "initialize",
+        Some(json!({"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "bench", "version": "1.0"}})),
+    );
+    handler.handle(init);
+    let notif = JsonRpcRequest::notification("notifications/initialized", None);
+    handler.handle(notif);
+    
+    let req = JsonRpcRequest::new(
+        2i64,
+        "tools/call",
+        Some(json!({"name": "echo", "arguments": {"message": "hello"}})),
+    );
+    c.bench_function("handler_tools_call", |b| {
+        b.iter(|| {
+            let resp = handler.handle(black_box(req.clone()));
+            black_box(resp);
+        })
+    });
+}
+
+criterion_group!(benches, benchmark_initialize, benchmark_tools_list, benchmark_tools_call);
 criterion_main!(benches);
 ```
 
@@ -291,7 +381,7 @@ Run: `cargo bench -p pawbun-mcp-server`
 
 ```bash
 git add crates/pawbun-mcp-server/benches/handler.rs crates/pawbun-mcp-server/Cargo.toml
-git commit -m "bench(mcp-server): add handler tools/list benchmark"
+git commit -m "bench(mcp-server): add handler initialize, tools/list and tools/call benchmarks"
 ```
 
 ### Task 1.4: Create benchmark report
@@ -324,12 +414,15 @@ git commit -m "bench(mcp-server): add handler tools/list benchmark"
 | Benchmark | Time | Throughput | Target Met |
 |-----------|------|------------|------------|
 | load_local/text | [TBD] | — | [ ] |
+| provider_format/openai/text | [TBD] | — | [ ] |
 
 ## pawbun-mcp-server
 
 | Benchmark | Time | Throughput | Target Met |
 |-----------|------|------------|------------|
-| handler_tools_list/100 | [TBD] | — | [ ] |
+| handler_initialize | [TBD] | — | [ ] |
+| handler_tools_list/1 | [TBD] | — | [ ] |
+| handler_tools_call | [TBD] | — | [ ] |
 ```
 
 - [ ] **Step 2: Run all benchmarks and fill results**
@@ -374,14 +467,13 @@ Key files to document:
 - `src/mcp/` — DynamicTool, transport module
 - `src/tools/` — All tool structs
 
-- [ ] **Step 3: Downgrade json_utils to pub(crate)**
+- [ ] **Step 3: Verify json_utils visibility**
 
-In `src/lib.rs`:
-```rust
-pub(crate) mod json_utils;
-```
+确认 `src/lib.rs` 中：`mod json_utils;`（非 `pub`）。
+经代码审查，当前已是正确限制，无需改动。
 
-In files that import `json_utils::parse`, change to `crate::json_utils::parse`.
+确认 `src/tools/mod.rs` 中：`pub(crate) mod url_utils;`、`pub(crate) mod path_utils;`。
+经代码审查，当前已是正确限制，无需改动。
 
 - [ ] **Step 4: Verify**
 
@@ -454,9 +546,53 @@ Key files:
 git commit -m "docs(mcp-server): enable deny(missing_docs), add docs, downgrade tool_bridge to pub(crate)"
 ```
 
+### Task 2.5: Enable deny(missing_docs) on pawbun-toolkit-macros
+
+**Files:**
+- Modify: `crates/pawbun-toolkit-macros/src/lib.rs`
+
+- [ ] **Step 1: Add directive**
+
+```rust
+#![deny(missing_docs)]
+```
+
+- [ ] **Step 2: Fix all missing_docs errors**
+
+Run: `cargo doc -p pawbun-toolkit-macros --no-deps`
+For each missing_docs error, add doc comment.
+
+Key items to document:
+- `pawbun_tool` 过程宏的 doc comment — 说明所有可用属性参数（`name`, `description`, `parameters` 等）和生成的代码结构
+- 宏内部辅助函数 — 确认为 `pub(crate)` 或非 `pub`，确保无意外暴露
+
+- [ ] **Step 3: Verify macro visibility**
+
+确认宏 crate 中没有 `pub` 的内部辅助函数（如 `parse_attributes`、`expand_tool_impl` 等）。
+如有，降级为 `pub(crate)` 或 `fn`（模块内私有）。
+
+- [ ] **Step 4: Verify**
+
+Run: `cargo doc -p pawbun-toolkit-macros --no-deps`
+Run: `cargo clippy -p pawbun-toolkit-macros --all-features -- -D warnings`
+Expected: Zero warnings
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add crates/pawbun-toolkit-macros/src/
+git commit -m "docs(toolkit-macros): enable deny(missing_docs), add macro docs, verify visibility"
+```
+
 ---
 
 ## Phase 3: Examples
+
+> **说明**：以下任务按 crate 创建示例。部分 crate 在 0.2.0 已有示例，本次任务在已有基础上补充缺口，确保每个 crate 总计 ≥ 2 个可运行示例。
+>
+> - `pawbun-toolkit` 已有：`docker_code_executor.rs`、`openai_vision.rs`、`openai_embedding.rs`
+> - `pawbun-files` 已有：`basic_usage.rs`、`provider_switching.rs`、`constraints.rs`
+> - `pawbun-mcp-server`、`pawbun-mcp-core`、`pawbun-toolkit-macros` 尚无示例，需各新建 2 个
 
 ### Task 3.1: pawbun-toolkit examples
 
@@ -672,34 +808,44 @@ git commit -m "docs: add cookbook and update README for 0.2.0/0.3.0"
 #!/usr/bin/env bash
 set -euo pipefail
 
-FEATURES=(
-  ""
-  "http"
-  "tokio"
-  "csv"
-  "jsonpath"
-  "schemars"
-  "tracing"
-  "macros"
-  "http,tokio"
-  "http,tokio,csv,jsonpath,schemars,tracing,macros"
+CRATES=(
+  "pawbun-toolkit"
+  "pawbun-files"
+  "pawbun-mcp-core"
+  "pawbun-mcp-server"
 )
 
-for feat in "${FEATURES[@]}"; do
-  if [ -z "$feat" ]; then
-    echo "=== checking: no default features ==="
-    cargo check --workspace --no-default-features
-  else
-    echo "=== checking: $feat ==="
-    cargo check --workspace --no-default-features --features "$feat"
-  fi
+# 对每个 crate 检查最小依赖集（no-default-features）
+for crate in "${CRATES[@]}"; do
+  echo "=== $crate: no default features ==="
+  cargo check -p "$crate" --no-default-features
 done
 
-echo "=== checking: all features ==="
+# 对 pawbun-toolkit 检查关键 feature 组合
+echo "=== pawbun-toolkit: key feature combinations ==="
+cargo check -p pawbun-toolkit --no-default-features --features http
+cargo check -p pawbun-toolkit --no-default-features --features tokio
+cargo check -p pawbun-toolkit --no-default-features --features csv
+cargo check -p pawbun-toolkit --no-default-features --features jsonpath
+cargo check -p pawbun-toolkit --no-default-features --features schemars
+cargo check -p pawbun-toolkit --no-default-features --features tracing
+cargo check -p pawbun-toolkit --no-default-features --features macros
+cargo check -p pawbun-toolkit --no-default-features --features "http,tokio,csv,jsonpath,schemars,tracing,macros"
+
+# 对 pawbun-files 检查关键 feature 组合
+echo "=== pawbun-files: key feature combinations ==="
+cargo check -p pawbun-files --no-default-features --features url-source
+cargo check -p pawbun-files --no-default-features --features image-meta
+cargo check -p pawbun-files --no-default-features --features "url-source,image-meta,tracing,tokio"
+
+# workspace 全 feature 验证
+echo "=== workspace: all features ==="
 cargo check --workspace --all-features
 
 echo "All feature combinations passed!"
 ```
+
+> **说明**：由于 workspace 未定义统一 features，直接 `cargo check --workspace --no-default-features --features "http"` 会报错 `none of the selected packages contains these features`。脚本改为 per-crate 检查最小依赖集 + 关键 feature 组合 + workspace 全 feature 验证的组合策略。
 
 - [ ] **Step 2: Make executable and test**
 

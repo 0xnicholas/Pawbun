@@ -206,11 +206,10 @@ fn benchmark_tools_call(c: &mut Criterion) {
 
 | 项 | 当前 | 目标 | 理由 | Breaking? |
 |---|---|---|---|---|
-| `json_utils` 模块 | `pub mod json_utils` | `pub(crate) mod json_utils` | 内部 JSON 解析辅助，不应暴露 | **是** |
-| `json_utils::parse` | `pub` | `pub(crate)` | 同上 | **是** |
-| `tools::url_utils` | `pub mod url_utils` | `pub(crate) mod url_utils` | SSRF 校验内部工具 | **是** |
-| `tools::path_utils` | `pub mod path_utils` | `pub(crate) mod path_utils` | 路径校验内部工具 | **是** |
-| `mcp::dynamic_tool` 的 `McpSession` | `pub` | `pub(crate)` | 内部会话管理 | **是** |
+| `json_utils` 模块 | `mod json_utils`（非 `pub`） | ✅ 已是 `mod` | 代码审查确认当前已正确限制 | 否 |
+| `tools::url_utils` | `pub(crate) mod url_utils` | ✅ 已是 `pub(crate)` | 代码审查确认当前已正确限制 | 否 |
+| `tools::path_utils` | `pub(crate) mod path_utils` | ✅ 已是 `pub(crate)` | 代码审查确认当前已正确限制 | 否 |
+| `mcp::adapter` 的 `McpSession` | `pub`（通过 `mcp/mod.rs` re-export） | 保持 `pub` | `McpAdapter::connect()` 返回此类型，用户必须能够命名它 | 否 |
 | `ToolKit` 的 `tools` 字段 | `pub` (隐含) | 保持 private | 通过 `get`/`list` 访问，不暴露内部 BTreeMap | 否（已是 private）|
 | `ToolError::Io` | `{ message, kind }` | 考虑添加 `#[source]` | 补充链式错误追溯 | **是**（结构体字段变化）|
 
@@ -233,7 +232,7 @@ fn benchmark_tools_call(c: &mut Criterion) {
 
 | 项 | 当前 | 目标 | 理由 | Breaking? |
 |---|---|---|---|---|
-| `schema_convert` 的辅助函数 | 部分 `pub` | 降级 | 用户只需 `schema_to_parameters`/`parameters_to_schema` | **是** |
+| `schema_convert` | `schema_to_parameters` 和 `parameters_to_schema` 均为 `pub` | 保持 `pub` | 经代码审查，该模块仅暴露这两个核心转换函数，无多余辅助函数需降级 | 否 |
 
 #### pawbun-toolkit-macros
 
@@ -283,30 +282,45 @@ pub fn method(&self) -> ReturnType;
 
 ### 5.2 示例规划
 
-每个 crate 2 个示例，存于 `crates/<crate>/examples/`：
+> **说明**：以下规划基于"每个 crate 至少新增或确保总计 ≥ 2 个可运行示例"的原则。部分 crate 在 0.2.0 已有示例，本次规划明确已有示例并补充缺口。
 
 #### pawbun-toolkit
 
+**已有示例（0.2.0）**：`docker_code_executor.rs`、`openai_vision.rs`、`openai_embedding.rs`（3 个）
+
+**本次新增**：
 - `examples/basic_toolkit.rs`：创建 ToolKit → 注册 FileReadTool → 执行 → 打印结果
 - `examples/custom_tool.rs`：手写 `Tool` trait 实现（不依赖宏）→ 注册 → 执行
 
 #### pawbun-files
 
+**已有示例（0.2.0）**：`basic_usage.rs`、`provider_switching.rs`、`constraints.rs`（3 个）
+
+**本次新增**：
 - `examples/load_image.rs`：加载本地图片 → 检测媒体类型 → 格式化为 OpenAI 格式
 - `examples/batch_load.rs`：批量加载多个文件 → 应用约束（大小限制、类型白名单）
 
 #### pawbun-mcp-server
 
+**已有示例**：无
+
+**本次新增**：
 - `examples/stdio_server.rs`：创建 McpServer → 注册 ToolKit → 通过 stdio 启动
 - `examples/sse_server.rs`：创建 McpServer → 配置 CORS → 通过 SSE 启动（需 `http` feature）
 
 #### pawbun-mcp-core
 
+**已有示例**：无
+
+**本次新增**：
 - `examples/schema_convert.rs`：serde_json::Value schema → Vec<ToolParameter> → 再转回 schema
 - `examples/custom_transport.rs`：实现最简单的 `Transport` trait（内存队列版，基于 `std::sync::mpsc`）
 
 #### pawbun-toolkit-macros
 
+**已有示例**：无
+
+**本次新增**：
 - `examples/basic_macro.rs`：使用 `#[pawbun_tool]` 宏定义工具，演示所有可用属性
 - `examples/custom_input.rs`：宏生成的工具接收自定义输入结构体
 
@@ -339,40 +353,35 @@ pub fn method(&self) -> ReturnType;
 
 ### 6.1 Feature 组合
 
-Workspace 层面的 feature 组合验证脚本 `scripts/check-features.sh`：
+Workspace 未定义统一的 features（features 均为 per-crate），因此验证脚本需按 crate 逐一检查。
+
+`scripts/check-features.sh`：
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-FEATURES=(
-  ""
-  "http"
-  "tokio"
-  "csv"
-  "jsonpath"
-  "schemars"
-  "tracing"
-  "macros"
-  "http,tokio"
-  "http,tokio,csv,jsonpath,schemars,tracing,macros"
+CRATES=(
+  "pawbun-toolkit"
+  "pawbun-files"
+  "pawbun-mcp-core"
+  "pawbun-mcp-server"
 )
 
-for feat in "${FEATURES[@]}"; do
-  if [ -z "$feat" ]; then
-    echo "=== checking: no default features ==="
-    cargo check --workspace --no-default-features
-  else
-    echo "=== checking: $feat ==="
-    cargo check --workspace --no-default-features --features "$feat"
-  fi
+# 对每个 crate 检查关键 feature 组合
+for crate in "${CRATES[@]}"; do
+  echo "=== $crate: no default features ==="
+  cargo check -p "$crate" --no-default-features
+
 done
 
-echo "=== checking: all features ==="
+echo "=== workspace: all features ==="
 cargo check --workspace --all-features
 
 echo "All feature combinations passed!"
 ```
+
+> **说明**：由于各 crate 的 feature 集合不同（如 `pawbun-toolkit` 有 `http`/`csv`/`jsonpath`，而 `pawbun-files` 有 `url-source`/`image-meta`），workspace 层面统一传入 `--features` 会导致 `error: none of the selected packages contains these features`。脚本采用 per-crate 的最小依赖集验证 + workspace 全 feature 验证的组合策略。
 
 ### 6.2 最小依赖集验证
 
