@@ -14,6 +14,9 @@ pub mod file_read;
 pub mod file_write;
 /// Vision tool interface (placeholder).
 pub mod vision;
+/// Local subprocess code executor (`tokio` feature).
+#[cfg(feature = "tokio")]
+pub mod local_code_executor;
 
 /// CSV query tool (`csv` feature).
 #[cfg(feature = "csv")]
@@ -33,6 +36,8 @@ pub(crate) mod url_utils;
 pub(crate) mod path_utils;
 
 pub use code_execute::CodeExecuteTool;
+#[cfg(feature = "tokio")]
+pub use local_code_executor::LocalCodeExecutor;
 pub use directory_list::DirectoryListTool;
 pub use file_read::FileReadTool;
 pub use file_write::FileWriteTool;

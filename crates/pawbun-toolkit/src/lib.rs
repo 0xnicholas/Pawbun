@@ -68,5 +68,8 @@ pub use tools::{WebFetchTool, WebSearchTool};
 #[cfg(feature = "tokio")]
 pub use async_tool::TokioExecutor;
 
+#[cfg(feature = "tokio")]
+pub use tools::LocalCodeExecutor;
+
 #[cfg(feature = "macros")]
 pub use pawbun_toolkit_macros::pawbun_tool;
