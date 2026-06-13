@@ -12,7 +12,7 @@ serde_json = "1"
 thiserror = "1"
 async-trait = "0.1"
 reqwest = { version = "0.12", features = ["json"], optional = true }
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "time", "macros"], optional = true }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "time", "macros", "process"], optional = true }
 schemars = { version = "0.8", optional = true }
 pawbun-toolkit-macros = { path = "../pawbun-toolkit-macros", optional = true }
 pawbun-mcp-core = { path = "../pawbun-mcp-core" }
