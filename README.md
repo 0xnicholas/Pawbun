@@ -1,8 +1,11 @@
-# Pawbun
+# Pawbun [![Archived](https://img.shields.io/badge/status-archived-lightgrey)](https://github.com/0xnicholas/pandaria)
+
+> **此仓库已归档。** Pawbun crate 已合并至 [Pandaria](https://github.com/0xnicholas/pandaria) monorepo。
+> 所有后续开发在 Pandaria 进行，本仓库只读保留历史记录。
 
 Pawbun 是 [Pandaria](https://github.com/0xnicholas/pandaria) 生态的 Rust workspace，为 Agent 系统提供工具注册、执行以及多模态文件处理能力。
 
-包含 5 个 crate：
+原包含 5 个 crate（后精简为 4）：
 
 - **pawbun-toolkit** — Agent 工具集（类似 CrewAI Tools），含内置工具、MCP 客户端、过程宏
 - **pawbun-toolkit-macros** — `#[pawbun_tool]` 属性宏，自动生成 `Tool` 样板代码
