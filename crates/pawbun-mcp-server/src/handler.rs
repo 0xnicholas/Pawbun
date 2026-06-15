@@ -1,4 +1,4 @@
-use pawbun_mcp_core::protocol::*;
+use pawbun_toolkit::mcp::*;
 use pawbun_toolkit::{ToolExecutor, ToolKit, ToolRegistry};
 use serde_json::Value;
 

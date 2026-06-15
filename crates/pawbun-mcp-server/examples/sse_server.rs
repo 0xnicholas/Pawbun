@@ -22,7 +22,7 @@ fn main() {
     println!("Starting SSE MCP server on http://127.0.0.1:3000");
     println!("GET /sse   — connect to SSE stream");
     println!("POST /message?sessionId=xxx — send JSON-RPC requests");
-    server.launch(pawbun_mcp_core::transport::ServerTransportConfig::Sse {
+    server.launch(pawbun_toolkit::mcp::ServerTransportConfig::Sse {
         bind_addr: "127.0.0.1:3000".into(),
     }).unwrap();
 }

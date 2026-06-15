@@ -2,8 +2,8 @@
 
 use std::io::{BufRead, ErrorKind, Write};
 
-use pawbun_mcp_core::protocol::{JsonRpcRequest, JsonRpcResponse};
-pub use pawbun_mcp_core::transport::{Transport, TransportConfig, TransportError};
+use super::core::protocol::{JsonRpcRequest, JsonRpcResponse};
+pub use super::core::transport::{Transport, TransportConfig, TransportError};
 
 // -------------------------------------------------------------------------
 // StdioTransport
@@ -115,7 +115,7 @@ impl Transport for StdioTransport {
 #[cfg(feature = "http")]
 mod sse {
     use super::*;
-    use pawbun_mcp_core::protocol::JsonRpcId;
+    use crate::mcp::core::protocol::JsonRpcId;
     use std::collections::HashMap;
     use std::sync::Arc;
     use std::time::Duration;
@@ -319,7 +319,7 @@ mod sse {
                 jsonrpc: "2.0".into(),
                 id,
                 result: None,
-                error: Some(pawbun_mcp_core::protocol::JsonRpcError {
+                error: Some(crate::mcp::core::protocol::JsonRpcError {
                     code: -32000,
                     message: "SSE connection lost, request not resent".into(),
                     data: None,
@@ -688,13 +688,13 @@ mod sse {
             });
 
             let mut transport = SseTransport::new(format!("http://127.0.0.1:{}/sse", port)).unwrap();
-            let req = pawbun_mcp_core::protocol::JsonRpcRequest::new(
+            let req = crate::mcp::core::protocol::JsonRpcRequest::new(
                 1i64,
                 "tools/list",
                 None,
             );
             let resp = transport.request(req).unwrap();
-            assert_eq!(resp.id, Some(pawbun_mcp_core::protocol::JsonRpcId::Number(1)));
+            assert_eq!(resp.id, Some(crate::mcp::core::protocol::JsonRpcId::Number(1)));
             assert!(resp.result.is_some());
 
             done_rx.recv_timeout(Duration::from_secs(5)).unwrap();

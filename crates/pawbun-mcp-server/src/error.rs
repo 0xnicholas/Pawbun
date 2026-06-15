@@ -1,4 +1,4 @@
-use pawbun_mcp_core::transport::TransportError;
+use pawbun_toolkit::mcp::TransportError;
 use pawbun_toolkit::ToolError;
 use pawbun_files::LoadError;
 

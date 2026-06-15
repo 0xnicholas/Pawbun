@@ -11,8 +11,8 @@ use std::io::ErrorKind;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use pawbun_mcp_core::protocol::{JsonRpcRequest, JsonRpcResponse};
-use pawbun_mcp_core::transport::{ServerTransport, TransportError};
+use pawbun_toolkit::mcp::{JsonRpcRequest, JsonRpcResponse};
+use pawbun_toolkit::mcp::{ServerTransport, TransportError};
 use tokio::runtime::Runtime;
 use tokio::sync::{mpsc, oneshot, RwLock};
 

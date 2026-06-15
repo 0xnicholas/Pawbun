@@ -11,7 +11,7 @@ use crate::ToolParameter;
 ///
 /// # Example
 /// ```
-/// use pawbun_mcp_core::schema_convert::schema_to_parameters;
+/// use pawbun_toolkit::mcp::schema_to_parameters;
 /// use serde_json::json;
 ///
 /// let schema = json!({
@@ -68,8 +68,8 @@ pub fn schema_to_parameters(schema: &Value) -> Vec<ToolParameter> {
 ///
 /// # Example
 /// ```
-/// use pawbun_mcp_core::schema_convert::parameters_to_schema;
-/// use pawbun_mcp_core::ToolParameter;
+/// use pawbun_toolkit::mcp::parameters_to_schema;
+/// use pawbun_toolkit::ToolParameter;
 /// use serde_json::json;
 ///
 /// let params = vec![

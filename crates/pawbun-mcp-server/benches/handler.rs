@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use pawbun_mcp_core::protocol::*;
+use pawbun_toolkit::mcp::*;
 use pawbun_toolkit::{Tool, ToolError, ToolParameter, ToolResult};
 use pawbun_mcp_server::handler::RequestHandler;
 use serde_json::json;

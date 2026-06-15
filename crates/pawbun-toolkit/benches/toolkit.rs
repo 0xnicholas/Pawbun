@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use pawbun_mcp_core::schema_convert::parameters_to_schema;
+use pawbun_toolkit::mcp::core::schema_convert::parameters_to_schema;
 use pawbun_toolkit::{
     Tool, ToolError, ToolExecutor, ToolKit, ToolParameter, ToolRegistry, ToolResult,
 };

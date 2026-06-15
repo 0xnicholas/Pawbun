@@ -3,9 +3,6 @@
 //! Provides connectivity to MCP servers via stdio or SSE transport,
 //! and exposes remote MCP tools as local `Tool` trait implementations.
 //!
-//! Protocol types and transport traits are defined in `pawbun-mcp-core`.
-//! This module provides the client implementations and re-exports core types.
-//!
 //! # Example
 //! ```no_run
 //! use pawbun_toolkit::mcp::{McpAdapter, TransportConfig};
@@ -19,14 +16,16 @@
 //! ```
 
 pub mod adapter;
+/// MCP protocol core types (protocol, schema_convert, transport traits).
+pub mod core;
 pub mod dynamic_tool;
 pub mod transport;
 
-// Re-export from pawbun-mcp-core (backward compatible)
-pub use pawbun_mcp_core::protocol::*;
-pub use pawbun_mcp_core::schema_convert::*;
-pub use pawbun_mcp_core::transport::{
-    ServerTransportConfig, Transport, TransportConfig, TransportError,
+// Re-export core types for backward compatibility
+pub use self::core::protocol::*;
+pub use self::core::schema_convert::*;
+pub use self::core::transport::{
+    ServerTransport, ServerTransportConfig, Transport, TransportConfig, TransportError,
 };
 
 pub use adapter::{McpAdapter, McpError, McpSession};

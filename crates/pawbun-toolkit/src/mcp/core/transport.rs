@@ -2,7 +2,7 @@
 
 use std::io::ErrorKind;
 
-use crate::protocol::{JsonRpcRequest, JsonRpcResponse};
+use super::protocol::{JsonRpcRequest, JsonRpcResponse};
 
 /// Transport error.
 #[derive(Debug, Clone, thiserror::Error)]

@@ -1,5 +1,4 @@
-use pawbun_mcp_core::protocol::ServerInfo;
-use pawbun_mcp_core::transport::{ServerTransport, ServerTransportConfig};
+use pawbun_toolkit::mcp::{ServerInfo, ServerTransport, ServerTransportConfig};
 use pawbun_toolkit::{Tool, ToolKit};
 use pawbun_files::DefaultFileLoader;
 use serde_json::{json, Value};
@@ -23,7 +22,7 @@ pub struct McpServer {
 /// # Example
 /// ```no_run
 /// use pawbun_mcp_server::McpServer;
-/// use pawbun_mcp_core::transport::ServerTransportConfig;
+/// use pawbun_toolkit::mcp::ServerTransportConfig;
 /// use pawbun_toolkit::{ToolKit, FileReadTool};
 /// use pawbun_files::DefaultFileLoader;
 ///
@@ -219,7 +218,7 @@ impl McpServer {
         loop {
             let req = match transport.recv() {
                 Ok(req) => req,
-                Err(pawbun_mcp_core::transport::TransportError::UnexpectedEof) => break,
+                Err(pawbun_toolkit::mcp::TransportError::UnexpectedEof) => break,
                 Err(e) => return Err(e.into()),
             };
 

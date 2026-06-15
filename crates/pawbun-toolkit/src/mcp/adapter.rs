@@ -5,11 +5,11 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use serde_json::json;
 
-use pawbun_mcp_core::protocol::{
+use super::core::protocol::{
     CallToolParams, CallToolResult, ClientInfo, InitializeParams, JsonRpcRequest, JsonRpcResponse,
     ListToolsResult, McpToolDesc,
 };
-use pawbun_mcp_core::transport::{Transport, TransportConfig, TransportError};
+use super::core::transport::{Transport, TransportConfig, TransportError};
 use super::transport::StdioTransport;
 
 /// Error type for MCP operations.
@@ -319,7 +319,7 @@ mod tests {
         assert!(!result.is_error);
         assert_eq!(result.content.len(), 1);
         assert!(
-            matches!(&result.content[0], pawbun_mcp_core::protocol::ToolContent::Text { text } if text == "hello world")
+            matches!(&result.content[0], crate::mcp::ToolContent::Text { text } if text == "hello world")
         );
     }
 

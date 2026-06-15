@@ -5,7 +5,7 @@
 //!
 //! ```no_run
 //! use pawbun_mcp_server::McpServer;
-//! use pawbun_mcp_core::transport::ServerTransportConfig;
+//! use pawbun_toolkit::mcp::ServerTransportConfig;
 //! use pawbun_toolkit::{ToolKit, FileReadTool};
 //! use pawbun_files::DefaultFileLoader;
 //!

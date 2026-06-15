@@ -2,8 +2,8 @@
 
 use std::io::{BufRead, BufReader, Write};
 
-use pawbun_mcp_core::protocol::{JsonRpcRequest, JsonRpcResponse};
-use pawbun_mcp_core::transport::{ServerTransport, TransportError};
+use pawbun_toolkit::mcp::{JsonRpcRequest, JsonRpcResponse};
+use pawbun_toolkit::mcp::{ServerTransport, TransportError};
 
 /// Server transport using standard input/output.
 ///
